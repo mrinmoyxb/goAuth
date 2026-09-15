@@ -1,0 +1,4 @@
+CREATE TABLE users_metadata (
+    user_id BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    data JSONB NOT NULL DEFAULT '{}'
+);
