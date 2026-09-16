@@ -2,21 +2,21 @@ package database
 
 import (
 	"context"
-	"goAuth/internal/apperrors"
-	"os"
 	"fmt"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"goAuth/internal/apperrors"
+	"os"
 )
 
-func ConnectPostgres() (*pgxpool.Pool, error){
+func ConnectPostgres() (*pgxpool.Pool, error) {
 	databaseURL := os.Getenv("DATABASE_URL")
 	if databaseURL == "" {
-		return nil, apperrors.ErrDBURLNotFound;
+		return nil, apperrors.ErrDBURLNotFound
 	}
 
 	config, err := pgxpool.ParseConfig(databaseURL)
 	if err != nil {
-		return nil, apperrors.ErrParseDBURL;
+		return nil, apperrors.ErrParseDBURL
 	}
 
 	config.MaxConns = 10
