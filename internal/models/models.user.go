@@ -10,6 +10,11 @@ type User struct {
 	UpdatedAt    *time.Time
 }
 
+type UserMetadata struct {
+	UserID int64
+	Data   map[string]any
+}
+
 type UserRequest struct {
 	Email    string         `json:"email"`
 	Password string         `json:"password"`

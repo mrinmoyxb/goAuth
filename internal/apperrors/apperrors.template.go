@@ -6,3 +6,6 @@ type AuthError struct {
 	StatusCode int
 }
 
+func (e AuthError) Error() string {
+	return e.Message
+}
