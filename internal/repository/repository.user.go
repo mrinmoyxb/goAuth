@@ -24,7 +24,7 @@ func NewPostgresRepository(db *pgxpool.Pool) *PostgresRepository {
 func (r *PostgresRepository) RepositoryCreateUser(ctx context.Context, user *models.User, metadata *models.UserMetadata) error {
 	tx, err := r.db.Begin(ctx)
 	if err != nil {
-		return apperrors.ErrTxBeginFailed
+		return fmt.Errorf("%w: %v", apperrors.ErrInsertFailed, err)
 	}
 	defer tx.Rollback(ctx)
 
@@ -35,17 +35,17 @@ func (r *PostgresRepository) RepositoryCreateUser(ctx context.Context, user *mod
 		user.PasswordHash,
 	).Scan(&user.ID, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
-		return apperrors.ErrInsertFailed
+		return fmt.Errorf("%w: %v", apperrors.ErrInsertFailed, err)
 	}
 
 	metadata.UserID = user.ID
 	_, err = tx.Exec(
 		ctx,
-		`INSERT INTO users_metadata (user_id, data) VALUES ($1 '{}'::jsonb)`,
+		`INSERT INTO users_metadata (user_id, data) VALUES ($1, $2)`,
 		metadata.UserID, metadata.Data,
 	)
 	if err != nil {
-		return apperrors.ErrInsertFailed
+		return fmt.Errorf("%w: %v", apperrors.ErrInsertFailed, err)
 	}
 
 	return tx.Commit(ctx)
@@ -68,12 +68,10 @@ func (r *PostgresRepository) RepositoryFindByEmail(ctx context.Context, email st
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, apperrors.ErrUserNotFound
+			return nil, fmt.Errorf("%w: %v", apperrors.ErrUserNotFound, err)
 		}
 		return nil, fmt.Errorf("%w %v", apperrors.ErrQueryFailed, err)
 	}
 
 	return user, nil
 }
-
-

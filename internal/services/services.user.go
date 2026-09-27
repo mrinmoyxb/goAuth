@@ -21,7 +21,7 @@ func NewUserService(repo repository.PostgresRepository) *UserService {
 	}
 }
 
-func (s *UserService) SerivceCreateUser(ctx context.Context, req models.UserRequest) (*models.UserResponse, error) {
+func (s *UserService) ServiceCreateUser(ctx context.Context, req models.UserRequest) (*models.UserResponse, error) {
 	if req.Email == "" {
 		return nil, apperrors.ErrInvalidEmail
 	}
@@ -40,18 +40,31 @@ func (s *UserService) SerivceCreateUser(ctx context.Context, req models.UserRequ
 		return nil, apperrors.ErrEmailAlreadyExists
 	}
 
-	passwordHash, err := utils.utilHashPassword(req.Password)
+	passwordHash, err := utils.UtilHashPassword(req.Password)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("hash password: %w", err)
 	}
 
 	user := &models.User{
-		Email: email,
+		Email:        email,
 		PasswordHash: passwordHash,
 	}
 	metadata := &models.UserMetadata{
-		Data: req.Metadata, 
+		Data: req.Metadata,
 	}
 
-	return nil, nil
+	if err := s.repo.RepositoryCreateUser(ctx, user, metadata); err != nil {
+		if errors.Is(err, apperrors.ErrEmailAlreadyExists) {
+			return nil, apperrors.ErrEmailAlreadyExists
+		}
+		return nil, fmt.Errorf("create user: %w", err)
+	}
+
+	return &models.UserResponse{
+		ID: user.ID,
+		Email: user.Email,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
+		Metadata: metadata.Data,
+	}, nil
 }
