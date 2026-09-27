@@ -61,10 +61,42 @@ func (s *UserService) ServiceCreateUser(ctx context.Context, req models.UserRequ
 	}
 
 	return &models.UserResponse{
-		ID: user.ID,
-		Email: user.Email,
+		ID:        user.ID,
+		Email:     user.Email,
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
-		Metadata: metadata.Data,
+		Metadata:  metadata.Data,
+	}, nil
+}
+
+func (s *UserService) ServiceLogin(ctx context.Context, req models.UserRequestLogin) (*models.UserResponse, error) {
+	if req.Email == "" {
+		return nil, apperrors.ErrInvalidEmail
+	}
+
+	if req.Password == "" {
+		return nil, apperrors.ErrInvalidPassword
+	}
+
+	email := strings.ToLower(strings.TrimSpace(req.Email))
+
+	existingUser, err := s.repo.RepositoryFindByEmail(ctx, email)
+	if err != nil {
+		if errors.Is(err, apperrors.ErrUserNotFound) {
+			return nil, apperrors.ErrInvalidCredentials
+		}
+		return nil, err
+	}
+
+	passVerified, err := utils.UtilVerifyPassword(req.Password, existingUser.PasswordHash)
+	if err != nil || !passVerified {
+		return nil, apperrors.ErrInvalidCredentials
+	}
+
+	return &models.UserResponse{
+		ID:        existingUser.ID,
+		Email:     existingUser.Email,
+		CreatedAt: existingUser.CreatedAt,
+		UpdatedAt: existingUser.UpdatedAt,
 	}, nil
 }

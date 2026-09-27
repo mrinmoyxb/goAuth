@@ -21,10 +21,20 @@ type UserRequest struct {
 	Metadata map[string]any `json:"metadata,omitempty"`
 }
 
+type UserRequestLogin struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
 type UserResponse struct {
 	ID        int64          `json:"id"`
 	Email     string         `json:"email"`
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt *time.Time     `json:"updated_at"`
 	Metadata  map[string]any `json:"metadata,omitempty"`
+}
+
+type UserLogin struct {
+	Email        string `json:"email"`
+	PasswordHash string `json:"password"`
 }

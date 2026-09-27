@@ -114,5 +114,5 @@ func UtilVerifyPassword(password, encodeHash string) (bool, error) {
 		return true, nil
 	}
 
-	return false, fmt.Errorf("%w %v", apperrors.ErrInValidPassword, err)
+	return false, fmt.Errorf("%w: %v", apperrors.ErrInValidPassword, err)
 }

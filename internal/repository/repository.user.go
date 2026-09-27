@@ -70,7 +70,7 @@ func (r *PostgresRepository) RepositoryFindByEmail(ctx context.Context, email st
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, fmt.Errorf("%w: %v", apperrors.ErrUserNotFound, err)
 		}
-		return nil, fmt.Errorf("%w %v", apperrors.ErrQueryFailed, err)
+		return nil, fmt.Errorf("%w: %v", apperrors.ErrQueryFailed, err)
 	}
 
 	return user, nil
