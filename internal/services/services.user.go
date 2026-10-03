@@ -8,14 +8,15 @@ import (
 	"goAuth/internal/models"
 	"goAuth/internal/repository"
 	"goAuth/internal/utils"
+	"net/mail"
 	"strings"
 )
 
 type UserService struct {
-	repo repository.PostgresRepository
+	repo *repository.PostgresRepository
 }
 
-func NewUserService(repo repository.PostgresRepository) *UserService {
+func NewUserService(repo *repository.PostgresRepository) *UserService {
 	return &UserService{
 		repo: repo,
 	}
@@ -31,13 +32,14 @@ func (s *UserService) ServiceCreateUser(ctx context.Context, req models.UserRequ
 	}
 
 	email := strings.ToLower(strings.TrimSpace(req.Email))
-
-	existingUser, err := s.repo.RepositoryFindByEmail(ctx, email)
-	if err != nil && !errors.Is(err, apperrors.ErrUserNotFound) {
-		return nil, err
+	_, err := mail.ParseAddress(email)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %v", apperrors.ErrInvalidEmail, err)
 	}
-	if existingUser != nil {
-		return nil, apperrors.ErrEmailAlreadyExists
+
+	passwordVerified := utils.ValidatePassword(req.Password)
+	if !passwordVerified {
+		return nil, fmt.Errorf("%w: %v", apperrors.ErrInvalidPassword, err)
 	}
 
 	passwordHash, err := utils.UtilHashPassword(req.Password)
@@ -79,6 +81,15 @@ func (s *UserService) ServiceLogin(ctx context.Context, req models.UserRequestLo
 	}
 
 	email := strings.ToLower(strings.TrimSpace(req.Email))
+	_, err := mail.ParseAddress(email)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %v", apperrors.ErrInvalidEmail, err)
+	}
+
+	passwordVerified := utils.ValidatePassword(req.Password)
+	if !passwordVerified {
+		return nil, fmt.Errorf("%w: %v", apperrors.ErrInvalidPassword, err)
+	}
 
 	existingUser, err := s.repo.RepositoryFindByEmail(ctx, email)
 	if err != nil {

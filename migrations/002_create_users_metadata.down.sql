@@ -1,1 +1,1 @@
-DROP TABLE users_metadata IF EXISTS;
+DROP TABLE IF EXISTS users_metadata;

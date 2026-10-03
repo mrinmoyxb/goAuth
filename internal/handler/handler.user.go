@@ -21,6 +21,8 @@ func NewUserHandler(service *services.UserService) *UserHandler {
 }
 
 func (handler *UserHandler) HandlerCreateUser(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, 1 << 20)
+
 	var req models.UserRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -59,6 +61,8 @@ func (handler *UserHandler) HandlerCreateUser(w http.ResponseWriter, r *http.Req
 }
 
 func (handler *UserHandler) HandlerLogin(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, 1 << 20)
+	
 	var req models.UserRequestLogin
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
