@@ -17,8 +17,7 @@ func SetUpRouter(urlHandler *handler.UserHandler, redisClient *redis.Client) *ch
 	r.With(middleware.MiddlewareRateLimit(redisClient, 3, 5*time.Minute)).Post("/goAuth/register", urlHandler.HandlerCreateUser)
 	r.With(middleware.MiddlewareRateLimit(redisClient, 3, time.Minute)).Post("/goAuth/login", urlHandler.HandlerLogin)
 
-
-	r.With(middleware.MiddlewareLogger).Get("/test/health", func(w http.ResponseWriter, r *http.Request){
+	r.With(middleware.MiddlewareLogger).Get("/test/health", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Request received on health: ", r.URL.Path)
 	})
 

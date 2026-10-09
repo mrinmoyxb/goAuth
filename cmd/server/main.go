@@ -2,11 +2,11 @@ package main
 
 import (
 	"context"
-	"goAuth/internal/storage"
 	"goAuth/internal/handler"
 	"goAuth/internal/repository"
 	"goAuth/internal/router"
 	"goAuth/internal/services"
+	"goAuth/internal/storage"
 	"log"
 	"net/http"
 	"os"
@@ -15,7 +15,7 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
-)	
+)
 
 func main() {
 	err := godotenv.Load()
@@ -23,7 +23,7 @@ func main() {
 		log.Println("Warning: No .env file found, reading from system environment")
 	}
 
-	pool, err := storage.ConnectPostgres();
+	pool, err := storage.ConnectPostgres()
 	if err != nil {
 		log.Fatal("error from postgres db connection: ", err)
 	}
@@ -47,17 +47,17 @@ func main() {
 	userHandler := handler.NewUserHandler(userService)
 	app := router.SetUpRouter(userHandler, redisClient)
 
-	srv := &http.Server {
-		Addr: ":" + PORT,
-		Handler: app,
-		ReadTimeout: 5 * time.Second,
+	srv := &http.Server{
+		Addr:         ":" + PORT,
+		Handler:      app,
+		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
-		IdleTimeout: 60 * time.Second,
+		IdleTimeout:  60 * time.Second,
 	}
 
 	go func() {
 		log.Printf("goAuth server is running on PORT: %s", PORT)
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed{
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("goAuth server failed to start: %v\n", err)
 		}
 	}()
@@ -72,7 +72,7 @@ func main() {
 
 	if err := srv.Shutdown(ctx); err != nil {
 		log.Printf("graceful shutdown failed")
-	}else {
+	} else {
 		log.Println("goAuth server shut down cleanly")
 	}
 }

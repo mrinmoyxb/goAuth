@@ -11,7 +11,7 @@ import (
 
 func MiddlewareRateLimit(rdb *redis.Client, limit int, window time.Duration) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request){
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 			host, _, err := net.SplitHostPort(r.RemoteAddr)
 			if err != nil {
@@ -33,7 +33,7 @@ func MiddlewareRateLimit(rdb *redis.Client, limit int, window time.Duration) fun
 				}
 			}
 
-			if count > int64(limit){
+			if count > int64(limit) {
 				http.Error(
 					w, "Too many requests", http.StatusTooManyRequests,
 				)
@@ -47,9 +47,9 @@ func MiddlewareRateLimit(rdb *redis.Client, limit int, window time.Duration) fun
 
 }
 
-func MiddlewareLogger(next http.Handler) http.Handler{
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request){
+func MiddlewareLogger(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Request recieved middleware")
 		next.ServeHTTP(w, r)
 	})
-} 
+}

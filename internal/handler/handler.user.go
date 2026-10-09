@@ -21,11 +21,16 @@ func NewUserHandler(service *services.UserService) *UserHandler {
 }
 
 func (handler *UserHandler) HandlerCreateUser(w http.ResponseWriter, r *http.Request) {
-	r.Body = http.MaxBytesReader(w, r.Body, 1 << 20)
+	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
 
 	var req models.UserRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		var maxErr *http.MaxBytesError
+		if errors.As(err, &maxErr) {
+			http.Error(w, "request body too large", http.StatusRequestEntityTooLarge)
+			return
+		}
 		http.Error(w, apperrors.ErrInvalidRequest.Message, apperrors.ErrInvalidRequest.StatusCode)
 		return
 	}
@@ -41,11 +46,14 @@ func (handler *UserHandler) HandlerCreateUser(w http.ResponseWriter, r *http.Req
 		msg := "internal server error"
 
 		switch {
-		case errors.Is(err, apperrors.ErrInvalidEmail),
-			errors.Is(err, apperrors.ErrInValidPassword),
-			errors.Is(err, apperrors.ErrEmailAlreadyExists):
-			status = http.StatusBadRequest
-			msg = err.Error()
+		case errors.Is(err, apperrors.ErrInvalidEmail):
+			status, msg = http.StatusBadRequest, "invalid email"
+		case errors.Is(err, apperrors.ErrInvalidPassword):
+			status, msg = http.StatusBadRequest, "invalid password"
+		case errors.Is(err, apperrors.ErrEmailAlreadyExists):
+			status, msg = http.StatusConflict, "email already exists"
+		default:
+			log.Printf("register failed: %v", err)
 		}
 
 		http.Error(w, msg, status)
@@ -61,8 +69,8 @@ func (handler *UserHandler) HandlerCreateUser(w http.ResponseWriter, r *http.Req
 }
 
 func (handler *UserHandler) HandlerLogin(w http.ResponseWriter, r *http.Request) {
-	r.Body = http.MaxBytesReader(w, r.Body, 1 << 20)
-	
+	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+
 	var req models.UserRequestLogin
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {

@@ -23,28 +23,23 @@ func NewUserService(repo *repository.PostgresRepository) *UserService {
 }
 
 func (s *UserService) ServiceCreateUser(ctx context.Context, req models.UserRequest) (*models.UserResponse, error) {
-	if req.Email == "" {
-		return nil, apperrors.ErrInvalidEmail
+	email, err := utils.NormalizeEmail(req.Email)
+	if err != nil {
+		return nil, err
 	}
 
-	if req.Password == "" {
+	if !utils.ValidatePassword(req.Password) {
 		return nil, apperrors.ErrInvalidPassword
 	}
 
-	email := strings.ToLower(strings.TrimSpace(req.Email))
-	_, err := mail.ParseAddress(email)
-	if err != nil {
-		return nil, fmt.Errorf("%w: %v", apperrors.ErrInvalidEmail, err)
-	}
-
-	passwordVerified := utils.ValidatePassword(req.Password)
-	if !passwordVerified {
-		return nil, fmt.Errorf("%w: %v", apperrors.ErrInvalidPassword, err)
-	}
-
-	passwordHash, err := utils.UtilHashPassword(req.Password)
+	passwordHash, err := utils.UtilHashEntry(req.Password)
 	if err != nil {
 		return nil, fmt.Errorf("hash password: %w", err)
+	}
+
+	data := req.Metadata
+	if data == nil {
+		data = map[string]any{}
 	}
 
 	user := &models.User{
@@ -52,13 +47,10 @@ func (s *UserService) ServiceCreateUser(ctx context.Context, req models.UserRequ
 		PasswordHash: passwordHash,
 	}
 	metadata := &models.UserMetadata{
-		Data: req.Metadata,
+		Data: data,
 	}
 
 	if err := s.repo.RepositoryCreateUser(ctx, user, metadata); err != nil {
-		if errors.Is(err, apperrors.ErrEmailAlreadyExists) {
-			return nil, apperrors.ErrEmailAlreadyExists
-		}
 		return nil, fmt.Errorf("create user: %w", err)
 	}
 
@@ -99,7 +91,7 @@ func (s *UserService) ServiceLogin(ctx context.Context, req models.UserRequestLo
 		return nil, err
 	}
 
-	passVerified, err := utils.UtilVerifyPassword(req.Password, existingUser.PasswordHash)
+	passVerified, err := utils.UtilVerifyEntry(req.Password, existingUser.PasswordHash)
 	if err != nil || !passVerified {
 		return nil, apperrors.ErrInvalidCredentials
 	}

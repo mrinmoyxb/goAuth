@@ -8,6 +8,7 @@ import (
 	"goAuth/internal/models"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -35,6 +36,10 @@ func (r *PostgresRepository) RepositoryCreateUser(ctx context.Context, user *mod
 		user.PasswordHash,
 	).Scan(&user.ID, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			return apperrors.ErrEmailAlreadyExists
+		}
 		return fmt.Errorf("%w: %v", apperrors.ErrInsertFailed, err)
 	}
 
@@ -48,7 +53,10 @@ func (r *PostgresRepository) RepositoryCreateUser(ctx context.Context, user *mod
 		return fmt.Errorf("%w: %v", apperrors.ErrInsertFailed, err)
 	}
 
-	return tx.Commit(ctx)
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("%w: %v", apperrors.ErrInsertFailed, err)
+	}
+	return nil
 }
 
 func (r *PostgresRepository) RepositoryFindByEmail(ctx context.Context, email string) (*models.User, error) {

@@ -7,7 +7,7 @@ type User struct {
 	Email        string
 	PasswordHash string
 	CreatedAt    time.Time
-	UpdatedAt    *time.Time
+	UpdatedAt    time.Time
 }
 
 type UserMetadata struct {
@@ -30,11 +30,6 @@ type UserResponse struct {
 	ID        int64          `json:"id"`
 	Email     string         `json:"email"`
 	CreatedAt time.Time      `json:"created_at"`
-	UpdatedAt *time.Time     `json:"updated_at"`
+	UpdatedAt time.Time      `json:"updated_at"`
 	Metadata  map[string]any `json:"metadata,omitempty"`
-}
-
-type UserLogin struct {
-	Email        string `json:"email"`
-	PasswordHash string `json:"password"`
 }

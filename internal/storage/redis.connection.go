@@ -8,14 +8,14 @@ import (
 
 func ConnectRedis(ctx context.Context) (*redis.Client, error) {
 	rdb := redis.NewClient(&redis.Options{
-		Addr: "localhost:6379",
+		Addr:     "localhost:6379",
 		Password: "",
-		DB: 0,
+		DB:       0,
 	})
 
 	if err := rdb.Ping(ctx).Err(); err != nil {
 		panic(err)
 	}
 
-	return rdb, nil;
+	return rdb, nil
 }
