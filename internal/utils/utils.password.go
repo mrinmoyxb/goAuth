@@ -1,6 +1,6 @@
 package utils
 
-import 	"unicode"
+import "unicode"
 
 func ValidatePassword(str string) bool {
 	var hasUppercase, hasLowercase, hasDigits, hasSpecialChar bool

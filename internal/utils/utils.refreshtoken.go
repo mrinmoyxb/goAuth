@@ -1,15 +1,20 @@
 package utils
 
 import (
-	"errors"
-	"os"
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/base64"
+	"encoding/hex"
+	"fmt"
 )
 
-func GenerateRefreshToken() (string, error) {
-	token := os.Getenv("REFRESH_TOKEN_SECRET_KEY")
-	if len(token) < 64 {
-		return "", errors.New("REFRESH_TOKEN_SECRET_KEY is less than 64")
+func GenerateRefreshToken() (token string, tokenHash string, err error) {
+	b := make([]byte, 32)
+	if _, err := rand.Read(b); err != nil {
+		return "", "", fmt.Errorf("generate refresh token: %w", err)
 	}
 
-	return token, nil
+	token = base64.RawURLEncoding.EncodeToString(b)
+	sum := sha256.Sum256([]byte(token))
+	return token, hex.EncodeToString(sum[:]), nil
 }

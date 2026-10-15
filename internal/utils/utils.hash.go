@@ -48,6 +48,7 @@ func UtilHashEntry(str string) (string, error) {
 	full := fmt.Sprintf(
 		"$argon2id$v=%d$m=%d,t=%d,p=%d$%s$%s",
 		argon2.Version,
+		defaultParams.memory,
 		defaultParams.iterations,
 		defaultParams.parallelism,
 		encodedSalt,
@@ -58,8 +59,12 @@ func UtilHashEntry(str string) (string, error) {
 }
 
 func utilDecodeHash(encodedHash string) (*argon2Params, []byte, []byte, error) {
+	if encodedHash == "" {
+		return nil, nil, nil, apperrors.ErrInvalidHashFormat
+	}
+
 	parts := strings.Split(encodedHash, "$")
-	if len(parts) != 6 {
+	if len(parts) != 6 || parts[1] != "argon2id" {
 		return nil, nil, nil, apperrors.ErrInvalidHashFormat
 	}
 
@@ -82,6 +87,12 @@ func utilDecodeHash(encodedHash string) (*argon2Params, []byte, []byte, error) {
 		return nil, nil, nil, apperrors.ErrInvalidHashFormat
 	}
 
+	if params.memory == 0 || params.memory > 256*1024 ||
+		params.iterations == 0 || params.iterations > 10 ||
+		params.parallelism == 0 || params.parallelism > 16 {
+		return nil, nil, nil, apperrors.ErrInvalidHashFormat
+	}
+
 	salt, err := base64.RawStdEncoding.DecodeString(parts[4])
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("%w: %v", apperrors.ErrInvalidHashFormat, err)
@@ -90,6 +101,10 @@ func utilDecodeHash(encodedHash string) (*argon2Params, []byte, []byte, error) {
 	hash, err := base64.RawStdEncoding.DecodeString(parts[5])
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("%w: %v", apperrors.ErrInvalidHashFormat, err)
+	}
+
+	if len(salt) == 0 || len(hash) < 16 {
+		return nil, nil, nil, apperrors.ErrInvalidHashFormat
 	}
 
 	return params, salt, hash, nil
@@ -110,9 +125,5 @@ func UtilVerifyEntry(str, encodeHash string) (bool, error) {
 		uint32(len(hash)),
 	)
 
-	if subtle.ConstantTimeCompare(hash, candidateHash) == 1 {
-		return true, nil
-	}
-
-	return false, fmt.Errorf("%w: %v", apperrors.ErrInValidPassword, err)
+	return subtle.ConstantTimeCompare(hash, candidateHash) == 1, nil
 }
