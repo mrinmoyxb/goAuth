@@ -6,7 +6,7 @@ import (
 	"goAuth/internal/repository"
 	"goAuth/internal/router"
 	"goAuth/internal/services"
-	"goAuth/internal/storage"
+	"goAuth/internal/connections"
 	"log"
 	"net/http"
 	"os"
@@ -18,7 +18,7 @@ import (
 )
 
 func main() {
-	err := godotenv.Load()
+	err := godotenv.Load("../../.env")
 	if err != nil {
 		log.Println("Warning: No .env file found, reading from system environment")
 	}
