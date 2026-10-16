@@ -9,6 +9,7 @@ import (
 	"goAuth/internal/repository"
 	"goAuth/internal/utils"
 	"net/mail"
+	"strconv"
 	"strings"
 )
 
@@ -23,44 +24,78 @@ func NewUserService(repo *repository.PostgresRepository) *UserService {
 }
 
 func (s *UserService) ServiceCreateUser(ctx context.Context, req models.UserRequest) (*models.UserResponse, error) {
+	// 1. normalized mail
 	email, err := utils.NormalizeEmail(req.Email)
 	if err != nil {
 		return nil, err
 	}
 
+	// 2. password validation
 	if !utils.ValidatePassword(req.Password) {
 		return nil, apperrors.ErrInvalidPassword
 	}
 
+	// 3. hashed password
 	passwordHash, err := utils.UtilHashEntry(req.Password)
 	if err != nil {
-		return nil, fmt.Errorf("hash password: %w", err)
+		return nil, fmt.Errorf("failed to hash password: %w", err)
 	}
 
+	// 4. email verification token
+	emailToken, err := utils.GenerateRandomToken(10)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate email token: %w", err)
+	}
+
+	// 5. hashed email verification token
+	emailHashToken, err := utils.UtilHashEntry(emailToken)
+	if err != nil {
+		return nil, fmt.Errorf("failed to hash email token: %w", err)
+	}
+
+	// 6. need to insert in the users table
+	user := &models.UserInput{
+		Email:        email,
+		PasswordHash: passwordHash,
+		TokenHash:    emailHashToken,
+	}
+
+	// 7. metadata
 	data := req.Metadata
 	if data == nil {
 		data = map[string]any{}
 	}
 
-	user := &models.User{
-		Email:        email,
-		PasswordHash: passwordHash,
-	}
 	metadata := &models.UserMetadata{
 		Data: data,
 	}
 
+	// 8. call to db to create user
 	if err := s.repo.RepositoryCreateUser(ctx, user, metadata); err != nil {
 		return nil, fmt.Errorf("create user: %w", err)
 	}
 
-	return &models.UserResponse{
-		ID:        user.ID,
-		Email:     user.Email,
-		CreatedAt: user.CreatedAt,
-		UpdatedAt: user.UpdatedAt,
-		Metadata:  metadata.Data,
-	}, nil
+	// 12. response from DB
+	result := &models.UserResponse{
+		ID:               user.ID,
+		Email:            user.Email,
+		CreatedAt:        user.CreatedAt,
+		UpdatedAt:        user.UpdatedAt,
+		Metadata:         metadata.Data,
+		VerificationMail: false,
+	}
+
+	// 13. call service for email verification
+	success, err := s.ServiceSendEmailVerification(ctx, result.Email, emailToken)
+	if err != nil {
+		return nil, fmt.Errorf("failed to send email: ", err)
+	}
+	if success == true {
+		result.VerificationMail = true
+	}
+
+	// 15. done
+	return result, nil
 }
 
 func (s *UserService) ServiceLogin(ctx context.Context, req models.UserRequestLogin) (*models.UserResponse, error) {
@@ -96,10 +131,22 @@ func (s *UserService) ServiceLogin(ctx context.Context, req models.UserRequestLo
 		return nil, apperrors.ErrInvalidCredentials
 	}
 
+	userToken := utils.UserToken{UserID: strconv.FormatInt(existingUser.ID, 10), Role: "user"}
+	token, err := utils.NewAccessTokenClass()
+	if err != nil {
+		fmt.Println("error")
+	}
+
+	accessToken, err := token.GenerateAccessToken(userToken)
+	if err != nil {
+		fmt.Println("error")
+	}
+
 	return &models.UserResponse{
-		ID:        existingUser.ID,
-		Email:     existingUser.Email,
-		CreatedAt: existingUser.CreatedAt,
-		UpdatedAt: existingUser.UpdatedAt,
+		ID:          existingUser.ID,
+		Email:       existingUser.Email,
+		CreatedAt:   existingUser.CreatedAt,
+		UpdatedAt:   existingUser.UpdatedAt,
+		AccessToken: accessToken,
 	}, nil
 }

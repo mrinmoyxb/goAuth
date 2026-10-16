@@ -2,11 +2,11 @@ package main
 
 import (
 	"context"
+	"goAuth/internal/connections"
 	"goAuth/internal/handler"
 	"goAuth/internal/repository"
 	"goAuth/internal/router"
 	"goAuth/internal/services"
-	"goAuth/internal/connections"
 	"log"
 	"net/http"
 	"os"

@@ -30,4 +30,16 @@ var (
 		Message:    "Invalid request",
 		StatusCode: 400,
 	}
+
+	ErrInvalidEmailToken = AuthError{
+		Code:       "invalid_email_token",
+		Message:    "Invalid email token",
+		StatusCode: 400,
+	}
+
+	ErrInvalidUserID = AuthError{
+		Code:       "invalid_user_id",
+		Message:    "Invalid user id",
+		StatusCode: 400,
+	}
 )

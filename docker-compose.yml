@@ -1,11 +1,11 @@
 services:
   postgres:
     image: postgres:17
-    container_name: auth_postgres
+    container_name: goauth-postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: goAuth_db
+      POSTGRES_DB: goauthdb
     ports:
       - "5427:5432"
     volumes:

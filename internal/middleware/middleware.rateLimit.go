@@ -9,7 +9,7 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-func MiddlewareRateLimit(rdb *redis.Client, limit int, window time.Duration) func(http.Handler) http.Handler {
+func RateLimitMiddleware(rdb *redis.Client, limit int, window time.Duration) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
@@ -39,12 +39,9 @@ func MiddlewareRateLimit(rdb *redis.Client, limit int, window time.Duration) fun
 				)
 				return
 			}
-
 			next.ServeHTTP(w, r)
-
 		})
 	}
-
 }
 
 func MiddlewareLogger(next http.Handler) http.Handler {

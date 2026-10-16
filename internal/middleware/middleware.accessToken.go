@@ -8,6 +8,7 @@ import (
 )
 
 type contextKey string
+
 const userContextKey contextKey = "authenticatedUser"
 
 func AccessTokenVerifyMiddleware(accessToken *utils.AccessTokenClass) func(next http.Handler) http.Handler {
