@@ -3,12 +3,12 @@ package models
 import "time"
 
 type User struct {
-	ID             int64
-	Email          string
-	PasswordHash   string
-	CreatedAt      time.Time
-	UpdatedAt      time.Time
-	EmailVerified  bool
+	ID            int64
+	Email         string
+	PasswordHash  string
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
+	EmailVerified bool
 }
 
 // for creation of user
@@ -54,8 +54,9 @@ type UserResponse struct {
 }
 
 type LoginResponse struct {
-	Message string `json:"message"`
-	AccessToken string `json:"access_token"`
+	Message      string `json:"message"`
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
 }
 
 type UserEmailVerification struct {

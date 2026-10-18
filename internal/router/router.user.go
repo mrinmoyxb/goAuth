@@ -16,10 +16,10 @@ import (
 func SetUpRouter(userHandler *handler.UserHandler, redisClient *redis.Client) *chi.Mux {
 	r := chi.NewRouter()
 
-	r.Get("/test", func(w http.ResponseWriter, r *http.Request){
+	r.Get("/test", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(map[string]string{"success":"true"})
+		json.NewEncoder(w).Encode(map[string]string{"success": "true"})
 		fmt.Println("received request on: ", r.URL.Path)
 	})
 
@@ -35,8 +35,8 @@ func SetUpRouter(userHandler *handler.UserHandler, redisClient *redis.Client) *c
 		fmt.Println("Request received on health: ", r.URL.Path)
 	})
 
-	r.With(middleware.RateLimitMiddleware(redisClient, 3, 5*time.Minute), func(next http.Handler) http.Handler{
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request){
+	r.With(middleware.RateLimitMiddleware(redisClient, 3, 5*time.Minute), func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			fmt.Println("hello !!!")
 			next.ServeHTTP(w, r)
 		})

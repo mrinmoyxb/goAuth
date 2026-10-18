@@ -144,14 +144,25 @@ func (s *UserService) ServiceLogin(ctx context.Context, req models.UserRequestLo
 	if err != nil {
 		fmt.Println("error")
 	}
-
 	accessToken, err := token.GenerateAccessToken(userToken)
 	if err != nil {
 		fmt.Println("error")
 	}
 
+	// 5. Refresh token
+	refreshToken, err := utils.GenerateRandomToken(32)
+	refreshTokenHashed := utils.HashVerificationToken(refreshToken)
+
+	err = s.repo.RepositoryCreateUserSession(ctx, existingUser.ID, refreshTokenHashed)
+	if err != nil {
+		fmt.Println("Failed to insert refresh token in db")
+		return nil, err
+
+	}
+
 	return &models.LoginResponse{
 		Message: "login successfull",
 		AccessToken: accessToken,
+		RefreshToken: refreshToken,
 	}, nil
 }

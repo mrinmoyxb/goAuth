@@ -11,13 +11,10 @@ func GenerateRandomToken(n int) (string, error) {
 	if n <= 0 {
 		return "", errors.New("token length must be positive")
 	}
-
 	raw := make([]byte, n)
-
 	if _, err := rand.Read(raw); err != nil {
 		return "", err
 	}
-
 	return hex.EncodeToString(raw), nil
 }
 

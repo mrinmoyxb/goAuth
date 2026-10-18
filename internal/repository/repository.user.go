@@ -140,11 +140,11 @@ func (r *PostgresRepository) ReposistoryUpdateEmailVerification(ctx context.Cont
 		token,
 	).Scan(&userID)
 	if err != nil {
-        if errors.Is(err, pgx.ErrNoRows) {
-            return errors.New("invalid, expired, or already-used verification token")
-        }
-        return fmt.Errorf("%w: %w", apperrors.ErrQueryFailed, err)
-    }
+		if errors.Is(err, pgx.ErrNoRows) {
+			return errors.New("invalid, expired, or already-used verification token")
+		}
+		return fmt.Errorf("%w: %w", apperrors.ErrQueryFailed, err)
+	}
 	fmt.Println("DB2")
 	fmt.Println("userID: ", userID)
 
@@ -155,8 +155,8 @@ func (r *PostgresRepository) ReposistoryUpdateEmailVerification(ctx context.Cont
 		userID,
 	)
 	if err != nil {
-        return fmt.Errorf("%w: %w", apperrors.ErrQueryFailed, err)
-    }
+		return fmt.Errorf("%w: %w", apperrors.ErrQueryFailed, err)
+	}
 	fmt.Println("DB3")
 
 	if tag.RowsAffected() != 1 {

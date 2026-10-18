@@ -2,8 +2,8 @@ package handler
 
 import (
 	"encoding/json"
-	"net/http"
 	"fmt"
+	"net/http"
 )
 
 func (handler *UserHandler) HandlerEmailVerification(w http.ResponseWriter, r *http.Request) {
