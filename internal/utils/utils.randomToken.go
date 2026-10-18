@@ -2,18 +2,26 @@ package utils
 
 import (
 	"crypto/rand"
-	"math/big"
+	"crypto/sha256"
+	"encoding/hex"
+	"errors"
 )
 
 func GenerateRandomToken(n int) (string, error) {
-	const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	token := make([]byte, n)
-	for i := range n {
-		num, err := rand.Int(rand.Reader, big.NewInt(int64(len(letters))))
-		if err != nil {
-			return "", err
-		}
-		token[i] = letters[num.Int64()]
+	if n <= 0 {
+		return "", errors.New("token length must be positive")
 	}
-	return string(token), nil
+
+	raw := make([]byte, n)
+
+	if _, err := rand.Read(raw); err != nil {
+		return "", err
+	}
+
+	return hex.EncodeToString(raw), nil
+}
+
+func HashVerificationToken(token string) string {
+	hash := sha256.Sum256([]byte(token))
+	return hex.EncodeToString(hash[:])
 }

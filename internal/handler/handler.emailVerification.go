@@ -3,12 +3,18 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+	"fmt"
 )
 
 func (handler *UserHandler) HandlerEmailVerification(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("DONE1")
 	token := r.URL.Query().Get("token")
 	email := r.URL.Query().Get("email")
 
+	fmt.Println("token from user: ", token)
+	fmt.Println("email from user: ", email)
+
+	fmt.Println("DONE2")
 	if token == "" || email == "" {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
@@ -16,6 +22,7 @@ func (handler *UserHandler) HandlerEmailVerification(w http.ResponseWriter, r *h
 		return
 	}
 
+	fmt.Println("DONE3")
 	res, err := handler.service.ServiceEmailVerificationToken(r.Context(), email, token)
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")

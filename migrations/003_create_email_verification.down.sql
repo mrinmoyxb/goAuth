@@ -1,1 +1,1 @@
-DROP TABLE IF EXISTS email_verification
+DROP TABLE IF EXISTS email_verification;

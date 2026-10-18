@@ -48,7 +48,7 @@ func (s *UserService) ServiceCreateUser(ctx context.Context, req models.UserRequ
 	}
 
 	// 5. hashed email verification token
-	emailHashToken, err := utils.UtilHashEntry(emailToken)
+	emailHashToken := utils.HashVerificationToken(emailToken)
 	if err != nil {
 		return nil, fmt.Errorf("failed to hash email token: %w", err)
 	}
@@ -98,7 +98,7 @@ func (s *UserService) ServiceCreateUser(ctx context.Context, req models.UserRequ
 	return result, nil
 }
 
-func (s *UserService) ServiceLogin(ctx context.Context, req models.UserRequestLogin) (*models.UserResponse, error) {
+func (s *UserService) ServiceLogin(ctx context.Context, req models.UserRequestLogin) (*models.LoginResponse, error) {
 	if req.Email == "" {
 		return nil, apperrors.ErrInvalidEmail
 	}
@@ -118,6 +118,7 @@ func (s *UserService) ServiceLogin(ctx context.Context, req models.UserRequestLo
 		return nil, fmt.Errorf("%w: %v", apperrors.ErrInvalidPassword, err)
 	}
 
+	// 1. Find user by email
 	existingUser, err := s.repo.RepositoryFindByEmail(ctx, email)
 	if err != nil {
 		if errors.Is(err, apperrors.ErrUserNotFound) {
@@ -126,11 +127,18 @@ func (s *UserService) ServiceLogin(ctx context.Context, req models.UserRequestLo
 		return nil, err
 	}
 
+	// 2. Ensure email is verified
+	if existingUser.EmailVerified == false {
+		return nil, apperrors.ErrEmailNotVerified
+	}
+
+	// 3. Verify password
 	passVerified, err := utils.UtilVerifyEntry(req.Password, existingUser.PasswordHash)
 	if err != nil || !passVerified {
 		return nil, apperrors.ErrInvalidCredentials
 	}
-
+	
+	// 4. Access token
 	userToken := utils.UserToken{UserID: strconv.FormatInt(existingUser.ID, 10), Role: "user"}
 	token, err := utils.NewAccessTokenClass()
 	if err != nil {
@@ -142,11 +150,8 @@ func (s *UserService) ServiceLogin(ctx context.Context, req models.UserRequestLo
 		fmt.Println("error")
 	}
 
-	return &models.UserResponse{
-		ID:          existingUser.ID,
-		Email:       existingUser.Email,
-		CreatedAt:   existingUser.CreatedAt,
-		UpdatedAt:   existingUser.UpdatedAt,
+	return &models.LoginResponse{
+		Message: "login successfull",
 		AccessToken: accessToken,
 	}, nil
 }

@@ -1,4 +1,4 @@
-CREATE TABLE email_verification VALUES (
+CREATE TABLE email_verification (
     id BIGSERIAL PRIMARY KEY,
     user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE, 
     email TEXT NOT NULL UNIQUE,

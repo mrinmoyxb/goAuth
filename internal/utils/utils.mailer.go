@@ -20,7 +20,7 @@ func SendMail(receiver string, token string) (bool, error) {
 	m.SetHeader("To", receiver)
 	m.SetHeader("Subject", "Verify You Email - goAuth")
 
-	verificationURL := fmt.Sprintf("http://localhost:8080/goAuth/verify-email?token=%s?email=%s", token, receiver)
+	verificationURL := fmt.Sprintf("http://localhost:3000/goAuth/verify-email?token=%s&email=%s", token, receiver)
 
 	htmlBody := fmt.Sprintf(`
 		<div style="font-family: Arial, sans-serif; text-align: center; padding: 20px;">

@@ -3,11 +3,12 @@ package models
 import "time"
 
 type User struct {
-	ID           int64
-	Email        string
-	PasswordHash string
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	ID             int64
+	Email          string
+	PasswordHash   string
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
+	EmailVerified  bool
 }
 
 // for creation of user
@@ -50,6 +51,11 @@ type UserResponse struct {
 	Metadata         map[string]any `json:"metadata,omitempty"`
 	AccessToken      string         `json:"access_token"`
 	VerificationMail bool           `json:"verification_mail"`
+}
+
+type LoginResponse struct {
+	Message string `json:"message"`
+	AccessToken string `json:"access_token"`
 }
 
 type UserEmailVerification struct {

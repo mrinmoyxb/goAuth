@@ -50,23 +50,12 @@ func (s *UserService) ServiceEmailVerificationToken(ctx context.Context, email s
 	user := &models.UserEmailVerify{
 		Email: email,
 	}
-	response := false
-	err = s.repo.RepositoryFindByEmailEmailVerification(ctx, user, &response)
-	if err != nil {
-		if errors.Is(err, apperrors.ErrUserNotFound) {
-			return false, apperrors.ErrInvalidCredentials
-		}
-		return false, err
-	}
 
-	// 2. verify email token
-	tokenVerified, err := utils.UtilVerifyEntry(token, user.TokenHash)
-	if err != nil || !tokenVerified {
-		return false, apperrors.ErrInvalidCredentials
-	}
+	hashedToken := utils.HashVerificationToken(token)
+	fmt.Println(hashedToken)
 
 	// 3. update users and email table
-	err = s.repo.ReposistoryUpdateEmailVerification(ctx, user.Email)
+	err = s.repo.ReposistoryUpdateEmailVerification(ctx, user.Email, hashedToken)
 	if err != nil {
 		if errors.Is(err, apperrors.ErrUserNotFound) {
 			return false, apperrors.ErrInvalidCredentials
