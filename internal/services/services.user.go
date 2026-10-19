@@ -137,7 +137,7 @@ func (s *UserService) ServiceLogin(ctx context.Context, req models.UserRequestLo
 	if err != nil || !passVerified {
 		return nil, apperrors.ErrInvalidCredentials
 	}
-	
+
 	// 4. Access token
 	userToken := utils.UserToken{UserID: strconv.FormatInt(existingUser.ID, 10), Role: "user"}
 	token, err := utils.NewAccessTokenClass()
@@ -157,12 +157,11 @@ func (s *UserService) ServiceLogin(ctx context.Context, req models.UserRequestLo
 	if err != nil {
 		fmt.Println("Failed to insert refresh token in db")
 		return nil, err
-
 	}
 
 	return &models.LoginResponse{
-		Message: "login successfull",
-		AccessToken: accessToken,
+		Message:      "login successfull",
+		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 	}, nil
 }

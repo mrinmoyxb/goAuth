@@ -24,4 +24,10 @@ var (
 		Message:    "Authentication token has been revoked",
 		StatusCode: 401,
 	}
+
+	ErrFailedToGenerateToken = AuthError{
+		Code:       "failed_to_generate_token",
+		Message:    "Failed to generate token",
+		StatusCode: 500,
+	}
 )

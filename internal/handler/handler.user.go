@@ -81,7 +81,7 @@ func (handler *UserHandler) HandlerLogin(w http.ResponseWriter, r *http.Request)
 	if req.Email == "" || req.Password == "" {
 		http.Error(w, apperrors.ErrRequiredField.Message, apperrors.ErrRequiredField.StatusCode)
 		return
-	} 
+	}
 
 	user, err := handler.service.ServiceLogin(r.Context(), req)
 	if err != nil {
@@ -103,18 +103,18 @@ func (handler *UserHandler) HandlerLogin(w http.ResponseWriter, r *http.Request)
 	}
 
 	http.SetCookie(w, &http.Cookie{
-		Name: "refreshToken",
-		Value: user.RefreshToken,
+		Name:     "refreshToken",
+		Value:    user.RefreshToken,
 		HttpOnly: true,
-		Secure: true,
+		Secure:   true,
 		SameSite: http.SameSiteLaxMode,
-		Path: "/auth/refresh",
-		MaxAge: 15 * 24 * 60 * 60,
+		Path:     "/auth/refresh",
+		MaxAge:   15 * 24 * 60 * 60,
 	})
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(map[string]string{"access_token":user.AccessToken, "msg":"login successfull"}); err != nil {
+	if err := json.NewEncoder(w).Encode(map[string]string{"access_token": user.AccessToken, "msg": "login successfull"}); err != nil {
 		log.Printf("failed to encode response: %v", err)
 	}
 }

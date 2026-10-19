@@ -37,9 +37,21 @@ var (
 		StatusCode: 400,
 	}
 
+	ErrInvalidPasswordResetToken = AuthError{
+		Code:       "invalid_password_reset_token",
+		Message:    "Invalid password reset token",
+		StatusCode: 400,
+	}
+
 	ErrInvalidUserID = AuthError{
 		Code:       "invalid_user_id",
 		Message:    "Invalid user id",
+		StatusCode: 400,
+	}
+
+	ErrFailedToSendMail = AuthError{
+		Code:       "failed_send_mail",
+		Message:    "failed to send mail",
 		StatusCode: 400,
 	}
 )
