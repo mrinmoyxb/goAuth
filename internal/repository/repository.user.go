@@ -136,7 +136,7 @@ func (r *PostgresRepository) ReposistoryUpdateEmailVerification(ctx context.Cont
 	var userID int64
 	err = tx.QueryRow(
 		ctx,
-		`UPDATE email_verification SET used_at = CURRENT_TIMESTAMP WHERE token_hash = $1 AND expires_at > CURRENT_TIMESTAMP AND used_at is NULL RETURNING user_id`,
+		`UPDATE email_verification SET used_at = CURRENT_TIMESTAMP WHERE token_hash = $1 AND expires_at > CURRENT_TIMESTAMP AND used_at IS NULL RETURNING user_id`,
 		token,
 	).Scan(&userID)
 	if err != nil {

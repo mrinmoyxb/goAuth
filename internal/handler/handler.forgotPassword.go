@@ -72,7 +72,7 @@ func (handler *UserHandler) HandlerForgotPasswordValidateToken(w http.ResponseWr
 func (handler *UserHandler) HandlerSetNewPassword(w http.ResponseWriter, r *http.Request) {
 	res := &UserNewPassword{}
 
-	// 1. validate email and token
+	// 1. validate email, token and new password
 	err := json.NewDecoder(r.Body).Decode(res)
 	if err != nil {
 		http.Error(w, apperrors.ErrInvalidCredentials.Message, apperrors.ErrInvalidCredentials.StatusCode)
@@ -87,10 +87,11 @@ func (handler *UserHandler) HandlerSetNewPassword(w http.ResponseWriter, r *http
 		return
 	}
 	if res.Password == "" {
-
+		http.Error(w, apperrors.ErrInvalidPassword.Message, apperrors.ErrAccountLocked.StatusCode)
+		return
 	}
 
-	// 2. validate token
+	// 2. validate token 
 	err = handler.service.ServiceValidateResetPasswordToken(r.Context(), res.Email, res.Token)
 	if err != nil {
 		http.Error(w, apperrors.ErrInvalidCredentials.Message, apperrors.ErrInvalidCredentials.StatusCode)

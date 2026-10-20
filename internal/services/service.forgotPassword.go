@@ -66,12 +66,40 @@ func (s *UserService) ServiceValidateResetPasswordToken(ctx context.Context, ema
 	}
 	hashedToken := utils.HashVerificationToken(token)
 
-	// 3.find the user by email and validating token
-	existingUser, err := s.repo.FindByEmailasswordReset(ctx, email)
-	if hashedToken != existingUser.TokenHashed {
-		return apperrors.ErrInvalidPasswordResetToken
-	}
+	// 3.find the user by email and validate token
+	existingUser, err := s.repo.FindByEmailasswordReset(ctx, email, hashedToken)
 
 	return nil
+}
 
+func (s *UserService) ServiceValidateNewPassword(ctx context.Context, email string, token string, password string) error {
+	// 1. verify email
+	if email == "" {
+		return apperrors.ErrInvalidEmail
+	}
+	email = strings.ToLower(strings.TrimSpace(email))
+	_, err := mail.ParseAddress(email)
+	if err != nil {
+		return fmt.Errorf("%w: %v", apperrors.ErrInvalidEmail, err)
+	}
+
+	// 2. hash token
+	if token == "" {
+		return apperrors.ErrInvalidToken
+	}
+	hashedToken := utils.HashVerificationToken(token)
+
+	// 3. validate new password and hash it 
+	if !utils.ValidatePassword(password) {
+		return apperrors.ErrInvalidPassword
+	}
+	passwordHash, err := utils.UtilHashEntry(password)
+	if err != nil {
+		return fmt.Errorf("failed to hash password: %w", err)
+	}
+
+	
+
+
+	return nil
 }
