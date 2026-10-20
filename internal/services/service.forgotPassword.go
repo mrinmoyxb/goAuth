@@ -67,7 +67,7 @@ func (s *UserService) ServiceValidateResetPasswordToken(ctx context.Context, ema
 	hashedToken := utils.HashVerificationToken(token)
 
 	// 3.find the user by email and validate token
-	existingUser, err := s.repo.FindByEmailasswordReset(ctx, email, hashedToken)
+	_, err := s.repo.FindByEmailasswordReset(ctx, email, hashedToken)
 
 	return nil
 }
@@ -98,7 +98,7 @@ func (s *UserService) ServiceValidateNewPassword(ctx context.Context, email stri
 		return fmt.Errorf("failed to hash password: %w", err)
 	}
 
-	
+
 
 
 	return nil
