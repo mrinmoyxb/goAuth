@@ -2,7 +2,10 @@ package handler
 
 import (
 	"encoding/json"
+	"goAuth/internal/middleware"
 	"net/http"
+	"strconv"
+	"fmt"
 )
 
 func clearRefreshCookie(w http.ResponseWriter){
@@ -33,6 +36,20 @@ func (handler *UserHandler) HandlerLogout(w http.ResponseWriter, r *http.Request
 }
 
 func (handler *UserHandler) HandlerLogoutAll(w http.ResponseWriter, r *http.Request) {
-	// access user id from middleware and send it to the 
-// 	err := handler.service.ServiceLogoutAll(r.Context(), userID)
+	user, ok := middleware.UserFormContext(r.Context())
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	userID, err := strconv.ParseInt(user.UserID, 10, 64)
+	if err != nil {
+		fmt.Println("Error during conversion:", err)
+		return
+	}
+
+	if err := handler.service.ServiceLogoutAll(r.Context(), userID); err != nil {
+		http.Error(w, "logout failed", http.StatusInternalServerError)
+		return 
+	}
 }

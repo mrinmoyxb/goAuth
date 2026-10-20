@@ -33,9 +33,13 @@ func AccessTokenVerifyMiddleware(accessToken *utils.AccessTokenClass) func(next 
 			}
 
 			ctx := context.WithValue(r.Context(), userContextKey, *user)
-			r = r.WithContext(ctx)
-
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
+}
+
+
+func UserFormContext(ctx context.Context) (utils.UserToken, bool) {
+	user, ok := ctx.Value(userContextKey).(utils.UserToken)
+	return user, ok
 }
