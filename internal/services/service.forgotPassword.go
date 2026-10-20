@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"goAuth/internal/apperrors"
+	"goAuth/internal/repository"
 	"goAuth/internal/utils"
 	"net/mail"
 	"strings"
@@ -49,47 +50,41 @@ func (s *UserService) ServiceForgotPasword(ctx context.Context, email string) er
 	return nil
 }
 
-func (s *UserService) ServiceValidateResetPasswordToken(ctx context.Context, email string, token string) error {
+func (s *UserService) ServiceValidateResetPasswordToken(ctx context.Context, email string, token string) (*repository.PasswordReset, error) {
 	// 1. verify email
 	if email == "" {
-		return apperrors.ErrInvalidEmail
+		return nil, apperrors.ErrInvalidEmail
 	}
 	email = strings.ToLower(strings.TrimSpace(email))
 	_, err := mail.ParseAddress(email)
 	if err != nil {
-		return fmt.Errorf("%w: %v", apperrors.ErrInvalidEmail, err)
+		return nil, fmt.Errorf("%w: %v", apperrors.ErrInvalidEmail, err)
 	}
 
 	// 2. hash token
 	if token == "" {
-		return apperrors.ErrInvalidToken
+		return nil, apperrors.ErrInvalidToken
 	}
 	hashedToken := utils.HashVerificationToken(token)
 
 	// 3.find the user by email and validate token
-	_, err := s.repo.FindByEmailasswordReset(ctx, email, hashedToken)
+	existingUser, err := s.repo.FindByEmailasswordReset(ctx, email, hashedToken)
+	if err != nil {
+		return nil, apperrors.ErrInvalidCredentials
+	}
 
-	return nil
+	return existingUser, nil
 }
 
-func (s *UserService) ServiceValidateNewPassword(ctx context.Context, email string, token string, password string) error {
-	// 1. verify email
-	if email == "" {
-		return apperrors.ErrInvalidEmail
-	}
-	email = strings.ToLower(strings.TrimSpace(email))
-	_, err := mail.ParseAddress(email)
-	if err != nil {
-		return fmt.Errorf("%w: %v", apperrors.ErrInvalidEmail, err)
-	}
+func (s *UserService) ServiceValidateNewPassword(ctx context.Context, userID int64, token string, password string) error {
 
-	// 2. hash token
+	// 1. hash token
 	if token == "" {
 		return apperrors.ErrInvalidToken
 	}
 	hashedToken := utils.HashVerificationToken(token)
 
-	// 3. validate new password and hash it 
+	// 2. validate new password and hash it 
 	if !utils.ValidatePassword(password) {
 		return apperrors.ErrInvalidPassword
 	}
@@ -98,8 +93,10 @@ func (s *UserService) ServiceValidateNewPassword(ctx context.Context, email stri
 		return fmt.Errorf("failed to hash password: %w", err)
 	}
 
-
-
+	err = s.repo.RepositoryResetPassword(ctx, userID, hashedToken, passwordHash)
+	if err != nil {
+		return apperrors.ErrInvalidCredentials
+	}
 
 	return nil
 }

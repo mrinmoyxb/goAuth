@@ -12,7 +12,7 @@ type UserPaswordTokenValidation struct {
 }
 
 type UserNewPassword struct {
-	Email    string
+	UserID 	 int64
 	Token    string
 	Password string
 }
@@ -59,13 +59,13 @@ func (handler *UserHandler) HandlerForgotPasswordValidateToken(w http.ResponseWr
 	}
 
 	// 2. validate token
-	err = handler.service.ServiceValidateResetPasswordToken(r.Context(), res.Email, res.Token)
+	user, err := handler.service.ServiceValidateResetPasswordToken(r.Context(), res.Email, res.Token)
 	if err != nil {
 		http.Error(w, apperrors.ErrInvalidCredentials.Message, apperrors.ErrInvalidCredentials.StatusCode)
 		return
 	}
 
-	json.NewEncoder(w).Encode(map[string]string{"msg": "token validated"})
+	json.NewEncoder(w).Encode(map[string]any{"msg": "token validated", "userID": user.UserID})
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -73,13 +73,8 @@ func (handler *UserHandler) HandlerSetNewPassword(w http.ResponseWriter, r *http
 	res := &UserNewPassword{}
 
 	// 1. validate email, token and new password
-	err := json.NewDecoder(r.Body).Decode(res)
-	if err != nil {
-		http.Error(w, apperrors.ErrInvalidCredentials.Message, apperrors.ErrInvalidCredentials.StatusCode)
-		return
-	}
-	if res.Email == "" {
-		http.Error(w, apperrors.ErrInvalidEmail.Message, apperrors.ErrInvalidEmail.StatusCode)
+	if res.UserID == 0 {
+		http.Error(w, apperrors.ErrInvalidUserID.Message, apperrors.ErrInvalidUserID.StatusCode)
 		return
 	}
 	if res.Token == "" {
@@ -92,7 +87,7 @@ func (handler *UserHandler) HandlerSetNewPassword(w http.ResponseWriter, r *http
 	}
 
 	// 2. validate token 
-	err = handler.service.ServiceValidateResetPasswordToken(r.Context(), res.Email, res.Token)
+	err := handler.service.ServiceValidateNewPassword(r.Context(), res.UserID, res.Token, res.Password)
 	if err != nil {
 		http.Error(w, apperrors.ErrInvalidCredentials.Message, apperrors.ErrInvalidCredentials.StatusCode)
 		return
