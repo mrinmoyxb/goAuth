@@ -23,14 +23,14 @@ func main() {
 		log.Println("Warning: No .env file found, reading from system environment")
 	}
 
-	pool, err := storage.ConnectPostgres()
+	pool, err := connections.ConnectPostgres()
 	if err != nil {
 		log.Fatal("error from postgres db connection: ", err)
 	}
 	defer pool.Close()
 	log.Println("✅ postgres connected successfully")
 
-	redisClient, err := storage.ConnectRedis(context.Background())
+	redisClient, err := connections.ConnectRedis(context.Background())
 	if err != nil {
 		log.Fatal("failed to connect to redis: ", err)
 	}

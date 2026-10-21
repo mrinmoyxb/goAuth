@@ -1,4 +1,4 @@
-package storage
+package connections
 
 import (
 	"context"
@@ -14,7 +14,8 @@ func ConnectRedis(ctx context.Context) (*redis.Client, error) {
 	})
 
 	if err := rdb.Ping(ctx).Err(); err != nil {
-		panic(err)
+		_ = rdb.Close()
+		return nil, err
 	}
 
 	return rdb, nil
