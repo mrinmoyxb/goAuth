@@ -6,7 +6,7 @@ import (
 	"goAuth/internal/apperrors"
 )
 
-func (r *PostgresRepository) RepositoryRevokeCurrentSession(ctx context.Context, refreshToken string) error {
+func (r *PostgresRepository) RevokeSessionByToken(ctx context.Context, refreshToken string) error {
 	_, err := r.db.Exec(
 		ctx,
 		`UPDATE sessions SET revoked_at = CURRENT_TIMESTAMP WHERE refresh_token_hash = $1 AND revoked_at IS NULL`,
@@ -20,7 +20,7 @@ func (r *PostgresRepository) RepositoryRevokeCurrentSession(ctx context.Context,
 	return nil
 }
 
-func (r *PostgresRepository) RepositoryRevokeAllSession(ctx context.Context, userID int64) error {
+func (r *PostgresRepository) RevokeAllUserSessions(ctx context.Context, userID int64) error {
 	_, err := r.db.Exec(
 		ctx,
 		`UPDATE sessions SET revoked_at = CURRENT_TIMESTAMP WHERE user_id = $1 AND revoked_at IS NULL`,

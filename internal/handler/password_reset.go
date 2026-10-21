@@ -6,21 +6,21 @@ import (
 	"net/http"
 )
 
-type UserPaswordTokenValidation struct {
+type PasswordResetTokenRequest struct {
 	Email string
 	Token string
 }
 
-type UserNewPassword struct {
+type ResetPasswordRequest struct {
 	UserID   int64
 	Token    string
 	Password string
 }
 
-func (handler *UserHandler) HandlerForgotPassword(w http.ResponseWriter, r *http.Request) {
+func (handler *UserHandler) RequestPasswordReset(w http.ResponseWriter, r *http.Request) {
 	var email string
 
-	err := json.NewDecoder(r.Body).Decode(email)
+	err := json.NewDecoder(r.Body).Decode(&email)
 	if err != nil {
 		http.Error(w, apperrors.ErrInvalidRequest.Message, apperrors.ErrInvalidRequest.StatusCode)
 		return
@@ -30,7 +30,7 @@ func (handler *UserHandler) HandlerForgotPassword(w http.ResponseWriter, r *http
 		return
 	}
 
-	err = handler.service.ServiceForgotPasword(r.Context(), email)
+	err = handler.service.RequestPasswordReset(r.Context(), email)
 	if err != nil {
 		http.Error(w, apperrors.ErrInvalidRequest.Message, apperrors.ErrInvalidRequest.StatusCode)
 		return
@@ -40,8 +40,8 @@ func (handler *UserHandler) HandlerForgotPassword(w http.ResponseWriter, r *http
 	w.WriteHeader(http.StatusOK)
 }
 
-func (handler *UserHandler) HandlerForgotPasswordValidateToken(w http.ResponseWriter, r *http.Request) {
-	res := &UserPaswordTokenValidation{}
+func (handler *UserHandler) ValidatePasswordResetToken(w http.ResponseWriter, r *http.Request) {
+	res := &PasswordResetTokenRequest{}
 
 	// 1. validate email and token
 	err := json.NewDecoder(r.Body).Decode(res)
@@ -59,7 +59,7 @@ func (handler *UserHandler) HandlerForgotPasswordValidateToken(w http.ResponseWr
 	}
 
 	// 2. validate token
-	user, err := handler.service.ServiceValidateResetPasswordToken(r.Context(), res.Email, res.Token)
+	user, err := handler.service.ValidatePasswordResetToken(r.Context(), res.Email, res.Token)
 	if err != nil {
 		http.Error(w, apperrors.ErrInvalidCredentials.Message, apperrors.ErrInvalidCredentials.StatusCode)
 		return
@@ -69,8 +69,8 @@ func (handler *UserHandler) HandlerForgotPasswordValidateToken(w http.ResponseWr
 	w.WriteHeader(http.StatusOK)
 }
 
-func (handler *UserHandler) HandlerSetNewPassword(w http.ResponseWriter, r *http.Request) {
-	res := &UserNewPassword{}
+func (handler *UserHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
+	res := &ResetPasswordRequest{}
 
 	// 1. validate email, token and new password
 	if res.UserID == 0 {
@@ -87,7 +87,7 @@ func (handler *UserHandler) HandlerSetNewPassword(w http.ResponseWriter, r *http
 	}
 
 	// 2. validate token
-	err := handler.service.ServiceValidateNewPassword(r.Context(), res.UserID, res.Token, res.Password)
+	err := handler.service.ResetPassword(r.Context(), res.UserID, res.Token, res.Password)
 	if err != nil {
 		http.Error(w, apperrors.ErrInvalidCredentials.Message, apperrors.ErrInvalidCredentials.StatusCode)
 		return

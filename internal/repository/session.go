@@ -6,8 +6,8 @@ import (
 	"goAuth/internal/apperrors"
 )
 
-func (r *PostgresRepository) RepositoryCreateUserSession(ctx context.Context, userID int64, refreshToken string) error {
-	err := r.db.QueryRow(
+func (r *PostgresRepository) CreateSession(ctx context.Context, userID int64, refreshToken string) error {
+	_, err := r.db.Exec(
 		ctx,
 		`INSERT INTO sessions (user_id, refresh_token_hash, expires_at) VALUES ($1, $2, CURRENT_TIMESTAMP + interval '15 days')`,
 		userID, refreshToken,

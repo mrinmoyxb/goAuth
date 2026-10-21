@@ -23,15 +23,15 @@ func SetUpRouter(userHandler *handler.UserHandler, redisClient *redis.Client) *c
 		fmt.Println("received request on: ", r.URL.Path)
 	})
 
-	accessToken, err := utils.NewAccessTokenClass()
+	tokenService, err := utils.NewTokenService()
 	if err != nil {
 		fmt.Println("error in initiating access token class inside router")
 	}
 
-	//r.With(middleware.RateLimitMiddleware(redisClient, 3, 5*time.Minute)).Post("/goAuth/register", userHandler.HandlerCreateUser)
-	r.Post("/goAuth/register", userHandler.HandlerCreateUser)
-	r.With(middleware.RateLimitMiddleware(redisClient, 3, time.Minute)).Post("/goAuth/login", userHandler.HandlerLogin)
-	r.With(middleware.AccessTokenVerifyMiddleware(accessToken), middleware.RateLimitMiddleware(redisClient, 3, time.Minute)).Get("/goAuth/health", func(w http.ResponseWriter, r *http.Request) {
+	//r.With(middleware.RateLimitMiddleware(redisClient, 3, 5*time.Minute)).Post("/goAuth/register", userHandler.Register)
+	r.Post("/goAuth/register", userHandler.Register)
+	r.With(middleware.RateLimitMiddleware(redisClient, 3, time.Minute)).Post("/goAuth/login", userHandler.Login)
+	r.With(middleware.RequireAccessToken(tokenService), middleware.RateLimitMiddleware(redisClient, 3, time.Minute)).Get("/goAuth/health", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Request received on health: ", r.URL.Path)
 	})
 
@@ -40,6 +40,6 @@ func SetUpRouter(userHandler *handler.UserHandler, redisClient *redis.Client) *c
 			fmt.Println("hello !!!")
 			next.ServeHTTP(w, r)
 		})
-	}).Get("/goAuth/verify-email", userHandler.HandlerEmailVerification)
+	}).Get("/goAuth/verify-email", userHandler.VerifyEmail)
 	return r
 }

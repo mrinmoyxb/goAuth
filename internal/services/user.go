@@ -23,7 +23,7 @@ func NewUserService(repo *repository.PostgresRepository) *UserService {
 	}
 }
 
-func (s *UserService) ServiceCreateUser(ctx context.Context, req models.UserRequest) (*models.UserResponse, error) {
+func (s *UserService) Register(ctx context.Context, req models.RegisterRequest) (*models.RegisterResponse, error) {
 	// 1. normalized mail
 	email, err := utils.NormalizeEmail(req.Email)
 	if err != nil {
@@ -31,24 +31,24 @@ func (s *UserService) ServiceCreateUser(ctx context.Context, req models.UserRequ
 	}
 
 	// 2. password validation
-	if !utils.ValidatePassword(req.Password) {
+	if !utils.ValidatePasswordPolicy(req.Password) {
 		return nil, apperrors.ErrInvalidPassword
 	}
 
 	// 3. hashed password
-	passwordHash, err := utils.UtilHashEntry(req.Password)
+	passwordHash, err := utils.HashPassword(req.Password)
 	if err != nil {
 		return nil, fmt.Errorf("failed to hash password: %w", err)
 	}
 
 	// 4. email verification token
-	emailToken, err := utils.GenerateRandomToken(10)
+	emailToken, err := utils.GenerateToken(10)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate email token: %w", err)
 	}
 
 	// 5. hashed email verification token
-	emailHashToken := utils.HashVerificationToken(emailToken)
+	emailTokenHash := utils.HashToken(emailToken)
 	if err != nil {
 		return nil, fmt.Errorf("failed to hash email token: %w", err)
 	}
@@ -57,7 +57,7 @@ func (s *UserService) ServiceCreateUser(ctx context.Context, req models.UserRequ
 	user := &models.UserInput{
 		Email:        email,
 		PasswordHash: passwordHash,
-		TokenHash:    emailHashToken,
+		TokenHash:    emailTokenHash,
 	}
 
 	// 7. metadata
@@ -71,12 +71,12 @@ func (s *UserService) ServiceCreateUser(ctx context.Context, req models.UserRequ
 	}
 
 	// 8. call to db to create user
-	if err := s.repo.RepositoryCreateUser(ctx, user, metadata); err != nil {
+	if err := s.repo.CreateUser(ctx, user, metadata); err != nil {
 		return nil, fmt.Errorf("create user: %w", err)
 	}
 
 	// 12. response from DB
-	result := &models.UserResponse{
+	result := &models.RegisterResponse{
 		ID:               user.ID,
 		Email:            user.Email,
 		CreatedAt:        user.CreatedAt,
@@ -86,9 +86,9 @@ func (s *UserService) ServiceCreateUser(ctx context.Context, req models.UserRequ
 	}
 
 	// 13. call service for email verification
-	success, err := s.ServiceSendEmailVerification(ctx, result.Email, emailToken)
+	success, err := s.SendVerificationEmail(ctx, result.Email, emailToken)
 	if err != nil {
-		return nil, fmt.Errorf("failed to send email: ", err)
+		return nil, fmt.Errorf("failed to send email: %w", err)
 	}
 	if success == true {
 		result.VerificationMail = true
@@ -98,7 +98,7 @@ func (s *UserService) ServiceCreateUser(ctx context.Context, req models.UserRequ
 	return result, nil
 }
 
-func (s *UserService) ServiceLogin(ctx context.Context, req models.UserRequestLogin) (*models.LoginResponse, error) {
+func (s *UserService) Login(ctx context.Context, req models.LoginRequest) (*models.LoginResponse, error) {
 	if req.Email == "" {
 		return nil, apperrors.ErrInvalidEmail
 	}
@@ -113,13 +113,13 @@ func (s *UserService) ServiceLogin(ctx context.Context, req models.UserRequestLo
 		return nil, fmt.Errorf("%w: %v", apperrors.ErrInvalidEmail, err)
 	}
 
-	passwordVerified := utils.ValidatePassword(req.Password)
+	passwordVerified := utils.ValidatePasswordPolicy(req.Password)
 	if !passwordVerified {
 		return nil, fmt.Errorf("%w: %v", apperrors.ErrInvalidPassword, err)
 	}
 
 	// 1. Find user by email
-	existingUser, err := s.repo.RepositoryFindByEmail(ctx, email)
+	existingUser, err := s.repo.FindUserByEmail(ctx, email)
 	if err != nil {
 		if errors.Is(err, apperrors.ErrUserNotFound) {
 			return nil, apperrors.ErrInvalidCredentials
@@ -133,14 +133,14 @@ func (s *UserService) ServiceLogin(ctx context.Context, req models.UserRequestLo
 	}
 
 	// 3. Verify password
-	passVerified, err := utils.UtilVerifyEntry(req.Password, existingUser.PasswordHash)
+	passVerified, err := utils.VerifyPassword(req.Password, existingUser.PasswordHash)
 	if err != nil || !passVerified {
 		return nil, apperrors.ErrInvalidCredentials
 	}
 
 	// 4. Access token
-	userToken := utils.UserToken{UserID: strconv.FormatInt(existingUser.ID, 10), Role: "user"}
-	token, err := utils.NewAccessTokenClass()
+	userToken := utils.AuthenticatedUser{UserID: strconv.FormatInt(existingUser.ID, 10), Role: "user"}
+	token, err := utils.NewTokenService()
 	if err != nil {
 		fmt.Println("error")
 	}
@@ -150,10 +150,10 @@ func (s *UserService) ServiceLogin(ctx context.Context, req models.UserRequestLo
 	}
 
 	// 5. Refresh token
-	refreshToken, err := utils.GenerateRandomToken(32)
-	refreshTokenHashed := utils.HashVerificationToken(refreshToken)
+	refreshToken, err := utils.GenerateToken(32)
+	refreshTokenHash := utils.HashToken(refreshToken)
 
-	err = s.repo.RepositoryCreateUserSession(ctx, existingUser.ID, refreshTokenHashed)
+	err = s.repo.CreateSession(ctx, existingUser.ID, refreshTokenHash)
 	if err != nil {
 		fmt.Println("Failed to insert refresh token in db")
 		return nil, err

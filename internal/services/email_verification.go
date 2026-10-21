@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-func (s *UserService) ServiceSendEmailVerification(ctx context.Context, email string, token string) (bool, error) {
+func (s *UserService) SendVerificationEmail(ctx context.Context, email string, token string) (bool, error) {
 	if email == "" {
 		return false, apperrors.ErrInvalidEmail
 	}
@@ -21,7 +21,7 @@ func (s *UserService) ServiceSendEmailVerification(ctx context.Context, email st
 	}
 
 	// 14. send mail
-	success, err := utils.SendMail(email, token)
+	success, err := utils.SendVerificationEmail(email, token)
 	if success == false {
 		fmt.Println("Error: ", err)
 		return false, err
@@ -31,7 +31,7 @@ func (s *UserService) ServiceSendEmailVerification(ctx context.Context, email st
 	return true, nil
 }
 
-func (s *UserService) ServiceEmailVerificationToken(ctx context.Context, email string, token string) (bool, error) {
+func (s *UserService) VerifyEmail(ctx context.Context, email string, token string) (bool, error) {
 	if email == "" {
 		return false, apperrors.ErrInvalidEmail
 	}
@@ -47,15 +47,15 @@ func (s *UserService) ServiceEmailVerificationToken(ctx context.Context, email s
 	}
 
 	// 1. query email
-	user := &models.UserEmailVerify{
+	user := &models.EmailVerification{
 		Email: email,
 	}
 
-	hashedToken := utils.HashVerificationToken(token)
+	hashedToken := utils.HashToken(token)
 	fmt.Println(hashedToken)
 
 	// 3. update users and email table
-	err = s.repo.ReposistoryUpdateEmailVerification(ctx, user.Email, hashedToken)
+	err = s.repo.MarkEmailVerifiedByToken(ctx, user.Email, hashedToken)
 	if err != nil {
 		if errors.Is(err, apperrors.ErrUserNotFound) {
 			return false, apperrors.ErrInvalidCredentials

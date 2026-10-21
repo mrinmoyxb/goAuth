@@ -11,7 +11,7 @@ type contextKey string
 
 const userContextKey contextKey = "authenticatedUser"
 
-func AccessTokenVerifyMiddleware(accessToken *utils.AccessTokenClass) func(next http.Handler) http.Handler {
+func RequireAccessToken(tokenService *utils.TokenService) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			authHeader := r.Header.Get("Authorization")
@@ -26,8 +26,8 @@ func AccessTokenVerifyMiddleware(accessToken *utils.AccessTokenClass) func(next 
 				return
 			}
 
-			user, token_err := accessToken.VerifyAccessToken(parts[1])
-			if token_err != nil {
+			user, tokenErr := tokenService.VerifyAccessToken(parts[1])
+			if tokenErr != nil {
 				http.Error(w, "unauthorized", http.StatusUnauthorized)
 				return
 			}
@@ -38,7 +38,7 @@ func AccessTokenVerifyMiddleware(accessToken *utils.AccessTokenClass) func(next 
 	}
 }
 
-func UserFormContext(ctx context.Context) (utils.UserToken, bool) {
-	user, ok := ctx.Value(userContextKey).(utils.UserToken)
+func UserFromContext(ctx context.Context) (utils.AuthenticatedUser, bool) {
+	user, ok := ctx.Value(userContextKey).(utils.AuthenticatedUser)
 	return user, ok
 }

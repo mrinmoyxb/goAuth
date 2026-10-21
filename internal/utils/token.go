@@ -7,7 +7,7 @@ import (
 	"errors"
 )
 
-func GenerateRandomToken(n int) (string, error) {
+func GenerateToken(n int) (string, error) {
 	if n <= 0 {
 		return "", errors.New("token length must be positive")
 	}
@@ -18,7 +18,7 @@ func GenerateRandomToken(n int) (string, error) {
 	return hex.EncodeToString(raw), nil
 }
 
-func HashVerificationToken(token string) string {
+func HashToken(token string) string {
 	hash := sha256.Sum256([]byte(token))
 	return hex.EncodeToString(hash[:])
 }

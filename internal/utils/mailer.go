@@ -8,17 +8,17 @@ import (
 	"gopkg.in/gomail.v2"
 )
 
-func SendMail(receiver string, token string) (bool, error) {
-	m := gomail.NewMessage()
+func SendVerificationEmail(receiver string, token string) (bool, error) {
+	message := gomail.NewMessage()
 	sender := os.Getenv("SENDER_MAIL")
-	app_password := os.Getenv("MAIL_PASSWORD")
-	if sender == "" || app_password == "" {
+	appPassword := os.Getenv("MAIL_PASSWORD")
+	if sender == "" || appPassword == "" {
 		return false, errors.New("invalid mail credentials")
 	}
 
-	m.SetHeader("From", sender)
-	m.SetHeader("To", receiver)
-	m.SetHeader("Subject", "Verify You Email - goAuth")
+	message.SetHeader("From", sender)
+	message.SetHeader("To", receiver)
+	message.SetHeader("Subject", "Verify You Email - goAuth")
 
 	verificationURL := fmt.Sprintf("http://localhost:3000/goAuth/verify-email?token=%s&email=%s", token, receiver)
 
@@ -33,10 +33,10 @@ func SendMail(receiver string, token string) (bool, error) {
 		</div>"smtp.gmail.com
 	`, verificationURL)
 
-	m.SetBody("text/html", htmlBody)
+	message.SetBody("text/html", htmlBody)
 
-	d := gomail.NewDialer("smtp.gmail.com", 587, sender, app_password)
-	if err := d.DialAndSend(m); err != nil {
+	dialer := gomail.NewDialer("smtp.gmail.com", 587, sender, appPassword)
+	if err := dialer.DialAndSend(message); err != nil {
 		return false, errors.New("error sending mails")
 	}
 
@@ -44,19 +44,19 @@ func SendMail(receiver string, token string) (bool, error) {
 	return true, nil
 }
 
-func SendMailForgotPassword(receiver string, token string) (bool, error) {
-	m := gomail.NewMessage()
+func SendPasswordResetEmail(receiver string, token string) (bool, error) {
+	message := gomail.NewMessage()
 
 	sender := os.Getenv("SENDER_MAIL")
-	app_password := os.Getenv("MAIL_PASSWORD")
+	appPassword := os.Getenv("MAIL_PASSWORD")
 
-	if sender == "" || app_password == "" {
+	if sender == "" || appPassword == "" {
 		return false, errors.New("invalid mail credentials")
 	}
 
-	m.SetHeader("From", sender)
-	m.SetHeader("To", receiver)
-	m.SetHeader("Subject", "Verify Your Email - goAuth")
+	message.SetHeader("From", sender)
+	message.SetHeader("To", receiver)
+	message.SetHeader("Subject", "Verify Your Email - goAuth")
 
 	htmlBody := fmt.Sprintf(`
     <div style="font-family: Arial, sans-serif; max-width: 500px; margin: auto; padding: 25px; text-align: center; border: 1px solid #e5e7eb; border-radius: 10px;">
@@ -85,11 +85,11 @@ func SendMailForgotPassword(receiver string, token string) (bool, error) {
     </div>
 `, token)
 
-	m.SetBody("text/html", htmlBody)
+	message.SetBody("text/html", htmlBody)
 
-	d := gomail.NewDialer("smtp.gmail.com", 587, sender, app_password)
+	dialer := gomail.NewDialer("smtp.gmail.com", 587, sender, appPassword)
 
-	if err := d.DialAndSend(m); err != nil {
+	if err := dialer.DialAndSend(message); err != nil {
 		return false, errors.New("error sending mail")
 	}
 

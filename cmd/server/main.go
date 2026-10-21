@@ -37,8 +37,8 @@ func main() {
 	defer redisClient.Close()
 	log.Println("✅ redis connected successfully")
 
-	PORT := os.Getenv("PORT")
-	if PORT == "" {
+	port := os.Getenv("PORT")
+	if port == "" {
 		log.Fatal("unable to find PORT")
 	}
 
@@ -48,7 +48,7 @@ func main() {
 	app := router.SetUpRouter(userHandler, redisClient)
 
 	srv := &http.Server{
-		Addr:         ":" + PORT,
+		Addr:         ":" + port,
 		Handler:      app,
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
@@ -56,7 +56,7 @@ func main() {
 	}
 
 	go func() {
-		log.Printf("goAuth server is running on PORT: %s", PORT)
+		log.Printf("goAuth server is running on PORT: %s", port)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("goAuth server failed to start: %v\n", err)
 		}

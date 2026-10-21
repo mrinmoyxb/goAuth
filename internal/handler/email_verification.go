@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func (handler *UserHandler) HandlerEmailVerification(w http.ResponseWriter, r *http.Request) {
+func (handler *UserHandler) VerifyEmail(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("DONE1")
 	token := r.URL.Query().Get("token")
 	email := r.URL.Query().Get("email")
@@ -23,7 +23,7 @@ func (handler *UserHandler) HandlerEmailVerification(w http.ResponseWriter, r *h
 	}
 
 	fmt.Println("DONE3")
-	res, err := handler.service.ServiceEmailVerificationToken(r.Context(), email, token)
+	res, err := handler.service.VerifyEmail(r.Context(), email, token)
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)

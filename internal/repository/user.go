@@ -22,7 +22,7 @@ func NewPostgresRepository(db *pgxpool.Pool) *PostgresRepository {
 	}
 }
 
-func (r *PostgresRepository) RepositoryCreateUser(ctx context.Context, user *models.UserInput, metadata *models.UserMetadata) error {
+func (r *PostgresRepository) CreateUser(ctx context.Context, user *models.UserInput, metadata *models.UserMetadata) error {
 	tx, err := r.db.Begin(ctx)
 	if err != nil {
 		return fmt.Errorf("%w: %v", apperrors.ErrInsertFailed, err)
@@ -82,7 +82,7 @@ func (r *PostgresRepository) RepositoryCreateUser(ctx context.Context, user *mod
 	return nil
 }
 
-func (r *PostgresRepository) RepositoryFindByEmail(ctx context.Context, email string) (*models.User, error) {
+func (r *PostgresRepository) FindUserByEmail(ctx context.Context, email string) (*models.User, error) {
 	user := &models.User{}
 
 	err := r.db.QueryRow(
@@ -108,12 +108,38 @@ func (r *PostgresRepository) RepositoryFindByEmail(ctx context.Context, email st
 	return user, nil
 }
 
-func (r *PostgresRepository) RepositoryFindByEmailEmailVerification(ctx context.Context, user *models.UserEmailVerify, response *bool) error {
+func (r *PostgresRepository) FindVerifiedUserByEmail(ctx context.Context, email string) (*models.User, error) {
+	user := &models.User{}
+
+	err := r.db.QueryRow(
+		ctx,
+		`SELECT id, email, password_hash, created_at, updated_at,  FROM users WHERE email = $1 AND email_verified = true`,
+		email,
+	).Scan(
+		&user.ID,
+		&user.Email,
+		&user.PasswordHash,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+		&user.EmailVerified,
+	)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, fmt.Errorf("%w: %v", apperrors.ErrUserNotFound, err)
+		}
+		return nil, fmt.Errorf("%w: %v", apperrors.ErrQueryFailed, err)
+	}
+
+	return user, nil
+}
+
+func (r *PostgresRepository) FindActiveEmailVerification(ctx context.Context, verification *models.EmailVerification, response *bool) error {
 	err := r.db.QueryRow(
 		ctx,
 		`SELECT token_hash, expires_at FROM email_verification WHERE email = $1 AND expires_at > current_timestamp`,
-		user.Email,
-	).Scan(&user.TokenHash, user.ExpiresAt)
+		verification.Email,
+	).Scan(&verification.TokenHash, verification.ExpiresAt)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return fmt.Errorf("%w: verification record not found", apperrors.ErrUserNotFound)
@@ -124,7 +150,7 @@ func (r *PostgresRepository) RepositoryFindByEmailEmailVerification(ctx context.
 	return nil
 }
 
-func (r *PostgresRepository) ReposistoryUpdateEmailVerification(ctx context.Context, email string, token string) error {
+func (r *PostgresRepository) MarkEmailVerifiedByToken(ctx context.Context, email string, token string) error {
 	tx, err := r.db.Begin(ctx)
 	if err != nil {
 		return fmt.Errorf("%w: %v", apperrors.ErrQueryFailed, err)

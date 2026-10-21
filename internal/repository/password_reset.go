@@ -13,12 +13,11 @@ type PasswordReset struct {
 	Email  string
 }
 
-func (r *PostgresRepository) RepositoryPasswordReset(ctx context.Context, userID int64, email string, token string) error {
+func (r *PostgresRepository) CreatePasswordReset(ctx context.Context, userID int64, email string, token string) error {
 	_, err := r.db.Exec(
 		ctx,
-		`INSERT INTO password_reset (user_id, email, token_hash, expires_at) VALUES ($1, $2, $3, CURRENT_TIMESTAMP + interval '5 minutes')`,
+		`INSERT INTO password_reset (user_id, token_hash, expires_at) VALUES ($1, $2, CURRENT_TIMESTAMP + interval '5 minutes')`,
 		userID,
-		email,
 		token,
 	)
 	if err != nil {
@@ -28,7 +27,7 @@ func (r *PostgresRepository) RepositoryPasswordReset(ctx context.Context, userID
 	return nil
 }
 
-func (r *PostgresRepository) FindByEmailasswordReset(ctx context.Context, email string, hashedToken string) (*PasswordReset, error) {
+func (r *PostgresRepository) FindPasswordReset(ctx context.Context, email string, hashedToken string) (*PasswordReset, error) {
 	res := &PasswordReset{}
 
 	err := r.db.QueryRow(
@@ -48,7 +47,7 @@ func (r *PostgresRepository) FindByEmailasswordReset(ctx context.Context, email 
 	return res, nil
 }
 
-func (r *PostgresRepository) RepositoryResetPassword(ctx context.Context, userID int64, tokenHash string, newPassword string) error {
+func (r *PostgresRepository) ResetPassword(ctx context.Context, userID int64, tokenHash string, newPassword string) error {
 	tx, err := r.db.Begin(ctx)
 	if err != nil {
 		return fmt.Errorf("%w: %v", apperrors.ErrInsertFailed, err)
@@ -71,7 +70,7 @@ func (r *PostgresRepository) RepositoryResetPassword(ctx context.Context, userID
 	// 2. update password in the users table
 	tag, err := tx.Exec(
 		ctx,
-		`UPDATE users set password_hash = $1 AND updated_at = CURRENT_TIMESTAMP WHERE user_id = $2 AND email_verified = true`,
+		`UPDATE users set password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE user_id = $2 AND email_verified = true`,
 		newPassword, userID,
 	)
 	if err != nil {

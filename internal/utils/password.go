@@ -2,14 +2,14 @@ package utils
 
 import "unicode"
 
-func ValidatePassword(str string) bool {
+func ValidatePasswordPolicy(password string) bool {
 	var hasUppercase, hasLowercase, hasDigits, hasSpecialChar bool
 
-	if len(str) < 8 || len(str) > 128 {
+	if len(password) < 8 || len(password) > 128 {
 		return false
 	}
 
-	for _, c := range str {
+	for _, c := range password {
 		switch {
 		case unicode.IsLower(c):
 			hasLowercase = true
@@ -22,7 +22,7 @@ func ValidatePassword(str string) bool {
 		}
 	}
 
-	if hasUppercase || hasLowercase || hasDigits || hasSpecialChar {
+	if hasUppercase && hasLowercase && hasDigits && hasSpecialChar {
 		return true
 	}
 

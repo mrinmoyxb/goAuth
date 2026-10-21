@@ -14,33 +14,33 @@ const (
 	accessTokenTTL    = 5 * time.Minute
 )
 
-type AccessTokenClass struct {
+type TokenService struct {
 	secret []byte
 }
 
-type UserToken struct {
+type AuthenticatedUser struct {
 	UserID string
 	Role   string
 }
 
-type AccessTokenClaims struct {
+type accessTokenClaims struct {
 	UserID string `json:"userID"`
 	Role   string `json:"role"`
 	jwt.RegisteredClaims
 }
 
-func NewAccessTokenClass() (*AccessTokenClass, error) {
+func NewTokenService() (*TokenService, error) {
 	secret := os.Getenv("ACCESS_TOKEN_SECRET_KEY")
 	if len(secret) < 64 {
 		return nil, errors.New("ACCESS TOKEN SECRET KEY must be at least 64 bytes")
 	}
 
-	return &AccessTokenClass{
+	return &TokenService{
 		secret: []byte(secret),
 	}, nil
 }
 
-func (a *AccessTokenClass) GenerateAccessToken(user UserToken) (string, error) {
+func (a *TokenService) GenerateAccessToken(user AuthenticatedUser) (string, error) {
 	if a == nil || len(a.secret) == 0 {
 		return "", errors.New("access token and service is not initializable")
 	}
@@ -51,7 +51,7 @@ func (a *AccessTokenClass) GenerateAccessToken(user UserToken) (string, error) {
 
 	now := time.Now().UTC()
 
-	claims := AccessTokenClaims{
+	claims := accessTokenClaims{
 		UserID: user.UserID,
 		Role:   user.Role,
 		RegisteredClaims: jwt.RegisteredClaims{
@@ -71,7 +71,7 @@ func (a *AccessTokenClass) GenerateAccessToken(user UserToken) (string, error) {
 	return signedToken, nil
 }
 
-func (a *AccessTokenClass) VerifyAccessToken(tokenString string) (*UserToken, error) {
+func (a *TokenService) VerifyAccessToken(tokenString string) (*AuthenticatedUser, error) {
 	if a == nil || len(a.secret) == 0 {
 		return nil, errors.New("access token service is not initialized")
 	}
@@ -80,7 +80,7 @@ func (a *AccessTokenClass) VerifyAccessToken(tokenString string) (*UserToken, er
 		return nil, errors.New("access token is required")
 	}
 
-	claims := &AccessTokenClaims{}
+	claims := &accessTokenClaims{}
 
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (any, error) {
 		if token.Method != jwt.SigningMethodHS256 {
@@ -110,5 +110,5 @@ func (a *AccessTokenClass) VerifyAccessToken(tokenString string) (*UserToken, er
 		return nil, errors.New("token subject does not match user ID")
 	}
 
-	return &UserToken{UserID: claims.UserID, Role: claims.Role}, nil
+	return &AuthenticatedUser{UserID: claims.UserID, Role: claims.Role}, nil
 }

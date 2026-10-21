@@ -27,14 +27,14 @@ var defaultParams = &argon2Params{
 	keyLength:   32,
 }
 
-func UtilHashEntry(str string) (string, error) {
+func HashPassword(password string) (string, error) {
 	salt := make([]byte, defaultParams.saltLength)
 	if _, err := rand.Read(salt); err != nil {
 		return "", fmt.Errorf("generate salt: %w", err)
 	}
 
 	hash := argon2.IDKey(
-		[]byte(str),
+		[]byte(password),
 		salt,
 		defaultParams.iterations,
 		defaultParams.memory,
@@ -110,14 +110,14 @@ func utilDecodeHash(encodedHash string) (*argon2Params, []byte, []byte, error) {
 	return params, salt, hash, nil
 }
 
-func UtilVerifyEntry(str, encodeHash string) (bool, error) {
-	params, salt, hash, err := utilDecodeHash(encodeHash)
+func VerifyPassword(password, encodedHash string) (bool, error) {
+	params, salt, hash, err := utilDecodeHash(encodedHash)
 	if err != nil {
 		return false, err
 	}
 
 	candidateHash := argon2.IDKey(
-		[]byte(str),
+		[]byte(password),
 		salt,
 		params.iterations,
 		params.memory,

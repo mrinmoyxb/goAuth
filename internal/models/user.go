@@ -21,7 +21,7 @@ type UserInput struct {
 	TokenHash    string
 }
 
-type UserEmailVerify struct {
+type EmailVerification struct {
 	Email     string
 	TokenHash string
 	ExpiresAt time.Time
@@ -32,18 +32,18 @@ type UserMetadata struct {
 	Data   map[string]any
 }
 
-type UserRequest struct {
+type RegisterRequest struct {
 	Email    string         `json:"email"`
 	Password string         `json:"password"`
 	Metadata map[string]any `json:"metadata,omitempty"`
 }
 
-type UserRequestLogin struct {
+type LoginRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
-type UserResponse struct {
+type RegisterResponse struct {
 	ID               int64          `json:"id"`
 	Email            string         `json:"email"`
 	CreatedAt        time.Time      `json:"created_at"`
@@ -59,12 +59,12 @@ type LoginResponse struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
-type UserEmailVerification struct {
+type VerifyEmailRequest struct {
 	UserID    int64  `json:"userID"`
 	TokenHash string `json:"tokenHash"`
 }
 
-type UserEmailVerificationResponse struct {
+type EmailVerificationResponse struct {
 	UserID    int64     `json:"userID"`
 	Email     string    `json:"email"`
 	ExpiresAt time.Time `json:"expiresAt"`

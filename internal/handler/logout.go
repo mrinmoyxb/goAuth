@@ -20,10 +20,10 @@ func clearRefreshCookie(w http.ResponseWriter) {
 	})
 }
 
-func (handler *UserHandler) HandlerLogout(w http.ResponseWriter, r *http.Request) {
+func (handler *UserHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("refreshToken")
 	if err == nil && cookie.Value != "" {
-		err := handler.service.ServiceLogout(r.Context(), cookie.Value)
+		err := handler.service.Logout(r.Context(), cookie.Value)
 		if err != nil {
 			http.Error(w, "logout failed", http.StatusInternalServerError)
 			return
@@ -35,8 +35,8 @@ func (handler *UserHandler) HandlerLogout(w http.ResponseWriter, r *http.Request
 	json.NewEncoder(w).Encode(map[string]string{"msg": "logout successfull"})
 }
 
-func (handler *UserHandler) HandlerLogoutAll(w http.ResponseWriter, r *http.Request) {
-	user, ok := middleware.UserFormContext(r.Context())
+func (handler *UserHandler) LogoutAll(w http.ResponseWriter, r *http.Request) {
+	user, ok := middleware.UserFromContext(r.Context())
 	if !ok {
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
@@ -48,7 +48,7 @@ func (handler *UserHandler) HandlerLogoutAll(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	if err := handler.service.ServiceLogoutAll(r.Context(), userID); err != nil {
+	if err := handler.service.LogoutAll(r.Context(), userID); err != nil {
 		http.Error(w, "logout failed", http.StatusInternalServerError)
 		return
 	}

@@ -20,10 +20,10 @@ func NewUserHandler(service *services.UserService) *UserHandler {
 	}
 }
 
-func (handler *UserHandler) HandlerCreateUser(w http.ResponseWriter, r *http.Request) {
+func (handler *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
 
-	var req models.UserRequest
+	var req models.RegisterRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		var maxErr *http.MaxBytesError
@@ -40,7 +40,7 @@ func (handler *UserHandler) HandlerCreateUser(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	user, err := handler.service.ServiceCreateUser(r.Context(), req)
+	user, err := handler.service.Register(r.Context(), req)
 	if err != nil {
 		status := http.StatusInternalServerError
 		msg := "internal server error"
@@ -68,10 +68,10 @@ func (handler *UserHandler) HandlerCreateUser(w http.ResponseWriter, r *http.Req
 
 }
 
-func (handler *UserHandler) HandlerLogin(w http.ResponseWriter, r *http.Request) {
+func (handler *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
 
-	var req models.UserRequestLogin
+	var req models.LoginRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, apperrors.ErrInvalidRequest.Message, apperrors.ErrInvalidRequest.StatusCode)
@@ -83,7 +83,7 @@ func (handler *UserHandler) HandlerLogin(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	user, err := handler.service.ServiceLogin(r.Context(), req)
+	user, err := handler.service.Login(r.Context(), req)
 	if err != nil {
 		status := http.StatusInternalServerError
 		msg := "internal server error"
