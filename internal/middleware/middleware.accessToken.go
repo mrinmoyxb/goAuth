@@ -38,7 +38,6 @@ func AccessTokenVerifyMiddleware(accessToken *utils.AccessTokenClass) func(next 
 	}
 }
 
-
 func UserFormContext(ctx context.Context) (utils.UserToken, bool) {
 	user, ok := ctx.Value(userContextKey).(utils.UserToken)
 	return user, ok

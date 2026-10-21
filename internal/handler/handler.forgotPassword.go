@@ -12,7 +12,7 @@ type UserPaswordTokenValidation struct {
 }
 
 type UserNewPassword struct {
-	UserID 	 int64
+	UserID   int64
 	Token    string
 	Password string
 }
@@ -86,7 +86,7 @@ func (handler *UserHandler) HandlerSetNewPassword(w http.ResponseWriter, r *http
 		return
 	}
 
-	// 2. validate token 
+	// 2. validate token
 	err := handler.service.ServiceValidateNewPassword(r.Context(), res.UserID, res.Token, res.Password)
 	if err != nil {
 		http.Error(w, apperrors.ErrInvalidCredentials.Message, apperrors.ErrInvalidCredentials.StatusCode)

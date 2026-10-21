@@ -2,15 +2,15 @@ package repository
 
 import (
 	"context"
-	"fmt"
-	"goAuth/internal/apperrors"
 	"errors"
+	"fmt"
 	"github.com/jackc/pgx/v5"
+	"goAuth/internal/apperrors"
 )
 
 type PasswordReset struct {
-	UserID      int64
-	Email       string
+	UserID int64
+	Email  string
 }
 
 func (r *PostgresRepository) RepositoryPasswordReset(ctx context.Context, userID int64, email string, token string) error {
@@ -38,12 +38,12 @@ func (r *PostgresRepository) FindByEmailasswordReset(ctx context.Context, email 
 		hashedToken,
 	).Scan(&res.UserID, &res.Email)
 	if err != nil {
-        if errors.Is(err, pgx.ErrNoRows) {
-            return nil, apperrors.ErrUserNotFound
-        }
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, apperrors.ErrUserNotFound
+		}
 
-        return nil, fmt.Errorf("%w: %w", apperrors.ErrQueryFailed, err)
-    }
+		return nil, fmt.Errorf("%w: %w", apperrors.ErrQueryFailed, err)
+	}
 
 	return res, nil
 }
@@ -62,14 +62,14 @@ func (r *PostgresRepository) RepositoryResetPassword(ctx context.Context, userID
 		tokenHash, userID,
 	)
 	if err != nil {
-        if errors.Is(err, pgx.ErrNoRows) {
-            return errors.New("invalid, expired, or already-used reset token")
-        }
-        return fmt.Errorf("%w: %w", apperrors.ErrQueryFailed, err)
-    }
+		if errors.Is(err, pgx.ErrNoRows) {
+			return errors.New("invalid, expired, or already-used reset token")
+		}
+		return fmt.Errorf("%w: %w", apperrors.ErrQueryFailed, err)
+	}
 
 	// 2. update password in the users table
-	tag , err := tx.Exec(
+	tag, err := tx.Exec(
 		ctx,
 		`UPDATE users set password_hash = $1 AND updated_at = CURRENT_TIMESTAMP WHERE user_id = $2 AND email_verified = true`,
 		newPassword, userID,
@@ -78,8 +78,8 @@ func (r *PostgresRepository) RepositoryResetPassword(ctx context.Context, userID
 		return fmt.Errorf("%w: %w", apperrors.ErrQueryFailed, err)
 	}
 	if tag.RowsAffected() != 1 {
-        return errors.New("verified user not found or email not verified")
-    }
+		return errors.New("verified user not found or email not verified")
+	}
 
 	// 3. revoke refresh token
 	_, err = tx.Exec(
@@ -90,7 +90,7 @@ func (r *PostgresRepository) RepositoryResetPassword(ctx context.Context, userID
 	if err != nil {
 		return fmt.Errorf("%w: %w", apperrors.ErrQueryFailed, err)
 	}
-	
+
 	if err := tx.Commit(ctx); err != nil {
 		return fmt.Errorf("%w: %v", apperrors.ErrInsertFailed, err)
 	}

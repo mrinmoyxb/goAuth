@@ -2,21 +2,21 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"goAuth/internal/middleware"
 	"net/http"
 	"strconv"
-	"fmt"
 )
 
-func clearRefreshCookie(w http.ResponseWriter){
+func clearRefreshCookie(w http.ResponseWriter) {
 	http.SetCookie(w, &http.Cookie{
-		Name: "refreshToken",
-		Value: "",
-		Path: "/auth/refresh",
+		Name:     "refreshToken",
+		Value:    "",
+		Path:     "/auth/refresh",
 		HttpOnly: true,
-		Secure: true,
+		Secure:   true,
 		SameSite: http.SameSiteLaxMode,
-		MaxAge: -1,
+		MaxAge:   -1,
 	})
 }
 
@@ -25,14 +25,14 @@ func (handler *UserHandler) HandlerLogout(w http.ResponseWriter, r *http.Request
 	if err == nil && cookie.Value != "" {
 		err := handler.service.ServiceLogout(r.Context(), cookie.Value)
 		if err != nil {
-            http.Error(w, "logout failed", http.StatusInternalServerError)
-            return
-        }
+			http.Error(w, "logout failed", http.StatusInternalServerError)
+			return
+		}
 	}
 
 	clearRefreshCookie(w)
 	w.WriteHeader(http.StatusNoContent)
-	json.NewEncoder(w).Encode(map[string]string{"msg":"logout successfull"})
+	json.NewEncoder(w).Encode(map[string]string{"msg": "logout successfull"})
 }
 
 func (handler *UserHandler) HandlerLogoutAll(w http.ResponseWriter, r *http.Request) {
@@ -50,6 +50,6 @@ func (handler *UserHandler) HandlerLogoutAll(w http.ResponseWriter, r *http.Requ
 
 	if err := handler.service.ServiceLogoutAll(r.Context(), userID); err != nil {
 		http.Error(w, "logout failed", http.StatusInternalServerError)
-		return 
+		return
 	}
 }

@@ -14,7 +14,6 @@ func (s *UserService) ServiceLogout(ctx context.Context, refreshToken string) er
 	return s.repo.RepositoryRevokeCurrentSession(ctx, tokenHash)
 }
 
-
 func (s *UserService) ServiceLogoutAll(ctx context.Context, userID int64) error {
 	return s.repo.RepositoryRevokeAllSession(ctx, userID)
 }

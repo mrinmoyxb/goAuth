@@ -8,16 +8,16 @@ import (
 
 func (r *PostgresRepository) RepositoryRevokeCurrentSession(ctx context.Context, refreshToken string) error {
 	_, err := r.db.Exec(
-		ctx, 
+		ctx,
 		`UPDATE sessions SET revoked_at = CURRENT_TIMESTAMP WHERE refresh_token_hash = $1 AND revoked_at IS NULL`,
 		refreshToken,
 	)
 
 	if err != nil {
-        return fmt.Errorf("%w: %w", apperrors.ErrQueryFailed, err)
-    }
+		return fmt.Errorf("%w: %w", apperrors.ErrQueryFailed, err)
+	}
 
-    return nil
+	return nil
 }
 
 func (r *PostgresRepository) RepositoryRevokeAllSession(ctx context.Context, userID int64) error {
@@ -27,8 +27,8 @@ func (r *PostgresRepository) RepositoryRevokeAllSession(ctx context.Context, use
 		userID,
 	)
 	if err != nil {
-        return fmt.Errorf("%w: %w", apperrors.ErrQueryFailed, err)
-    }
+		return fmt.Errorf("%w: %w", apperrors.ErrQueryFailed, err)
+	}
 
-    return nil
+	return nil
 }

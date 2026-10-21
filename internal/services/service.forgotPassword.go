@@ -84,7 +84,7 @@ func (s *UserService) ServiceValidateNewPassword(ctx context.Context, userID int
 	}
 	hashedToken := utils.HashVerificationToken(token)
 
-	// 2. validate new password and hash it 
+	// 2. validate new password and hash it
 	if !utils.ValidatePassword(password) {
 		return apperrors.ErrInvalidPassword
 	}
