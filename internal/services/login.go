@@ -32,7 +32,6 @@ func (s *UserService) Login(ctx context.Context, req models.LoginRequest) (*mode
 		return nil, fmt.Errorf("%w: %v", apperrors.ErrInvalidPassword, err)
 	}
 
-	// 1. Find user by email
 	existingUser, err := s.repo.FindUserByEmail(ctx, email)
 	if err != nil {
 		if errors.Is(err, apperrors.ErrUserNotFound) {
@@ -41,18 +40,15 @@ func (s *UserService) Login(ctx context.Context, req models.LoginRequest) (*mode
 		return nil, err
 	}
 
-	// 2. Ensure email is verified
 	if existingUser.EmailVerified == false {
 		return nil, apperrors.ErrEmailNotVerified
 	}
 
-	// 3. Verify password
 	passVerified, err := utils.VerifyPassword(req.Password, existingUser.PasswordHash)
 	if err != nil || !passVerified {
 		return nil, apperrors.ErrInvalidCredentials
 	}
 
-	// 4. Access token
 	userToken := utils.AuthenticatedUser{UserID: strconv.FormatInt(existingUser.ID, 10), Role: "user"}
 	token, err := utils.NewTokenService()
 	if err != nil {
@@ -63,7 +59,6 @@ func (s *UserService) Login(ctx context.Context, req models.LoginRequest) (*mode
 		fmt.Println("error")
 	}
 
-	// 5. Refresh token
 	refreshToken, err := utils.GenerateToken(32)
 	refreshTokenHash := utils.HashToken(refreshToken)
 

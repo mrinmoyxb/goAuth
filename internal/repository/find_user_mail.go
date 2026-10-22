@@ -14,7 +14,7 @@ func (r *PostgresRepository) FindUserByEmail(ctx context.Context, email string) 
 
 	err := r.db.QueryRow(
 		ctx,
-		`SELECT id, email, password_hash, created_at, updated_at,  FROM users WHERE email = $1`,
+		`SELECT id, email, password_hash, created_at, updated_at, email_verified FROM users WHERE email = $1`,
 		email,
 	).Scan(
 		&user.ID,
