@@ -62,7 +62,7 @@ func (handler *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	if err := json.NewEncoder(w).Encode(map[string]any{"user": user, "msg": "email verification pending"}); err != nil {
+	if err := json.NewEncoder(w).Encode(user); err != nil {
 		log.Printf("failed to encode response: %v", err)
 	}
 

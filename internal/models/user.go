@@ -46,11 +46,9 @@ type LoginRequest struct {
 type RegisterResponse struct {
 	ID               int64          `json:"id"`
 	Email            string         `json:"email"`
+	EmailVerified    bool           `json:"email_verified"`
+	EmailStatus      string         `json:"email_status"`
 	CreatedAt        time.Time      `json:"created_at"`
-	UpdatedAt        time.Time      `json:"updated_at"`
-	Metadata         map[string]any `json:"metadata,omitempty"`
-	AccessToken      string         `json:"access_token"`
-	VerificationMail bool           `json:"verification_mail"`
 }
 
 type LoginResponse struct {
