@@ -8,20 +8,26 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func (r *PostgresRepository) ValidateRefreshToken(ctx context.Context, token string) (int64, error) {
-	var userID int64
+type RefreshTokenInfo struct {
+	ID     int64 `json:"id"`
+	UserID int64 `json:"userId"`
+}
+
+func (r *PostgresRepository) ValidateRefreshToken(ctx context.Context, token string) (*RefreshTokenInfo, error) {
+	refreshToken := &RefreshTokenInfo{}
+
 	err := r.db.QueryRow(
 		ctx,
-		`SELECT user_id FROM session WHERE refresh_token_hash = $1 AND expires_at > CURRENT_TIMESTAMP`,
+		`SELECT id, user_id FROM sessions WHERE refresh_token_hash = $1 AND expires_at > CURRENT_TIMESTAMP`,
 		token,
-	).Scan(&userID)
+	).Scan(&refreshToken.ID, &refreshToken.UserID)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return -1, apperrors.ErrRefreshTokenInvalid
+			return nil, apperrors.ErrRefreshTokenInvalid
 		}
-		return -1, apperrors.ErrQueryFailed
+		return nil, apperrors.ErrQueryFailed
 	}
 
-	return userID, nil
+	return refreshToken, nil
 }

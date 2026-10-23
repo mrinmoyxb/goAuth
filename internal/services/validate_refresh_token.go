@@ -16,10 +16,9 @@ func (s *UserService) RefreshAccessToken(ctx context.Context, refreshToken strin
 	if refreshToken == "" {
 		return nil, apperrors.ErrRefreshTokenInvalid
 	}
+	oldHashedToken := utils.HashToken(refreshToken)
 
-	hashedToken := utils.HashToken(refreshToken)
-
-	userID, err := s.repo.ValidateRefreshToken(ctx, hashedToken)
+	refreshTokenInfo, err := s.repo.ValidateRefreshToken(ctx, oldHashedToken)
 	if err != nil {
 		return nil, err
 	}
@@ -28,27 +27,30 @@ func (s *UserService) RefreshAccessToken(ctx context.Context, refreshToken strin
 	if err != nil {
 		return nil, apperrors.ErrFailedToGenerateToken
 	}
-
-	user_id := strconv.FormatInt(userID, 10)
 	user := utils.AuthenticatedUser{
-		UserID: user_id,
+		UserID: strconv.FormatInt(refreshTokenInfo.UserID, 10),
 		Role:   "user",
 	}
-
 	access_token, err := token.GenerateAccessToken(user)
 	if err != nil {
 		return nil, apperrors.ErrFailedToGenerateToken
 	}
 
 	newRefreshToken, err := utils.GenerateToken(32)
+	if err != nil {
+		return nil, apperrors.ErrFailedToGenerateToken
+	}
 	newRefreshTokenHash := utils.HashToken(newRefreshToken)
 
-	err = s.repo.
+	err = s.repo.UpdateRefreshToken(ctx, oldHashedToken, newRefreshTokenHash, refreshTokenInfo.ID, refreshTokenInfo.UserID)
+	if err != nil {
+		return nil, err
+	}
 
 	return &AccessTokenResetResponse{
-		AccessToken: access_token,
+		AccessToken:  access_token,
+		RefreshToken: newRefreshToken,
 	}, nil
-
 }
 
 /*

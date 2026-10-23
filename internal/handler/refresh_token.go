@@ -18,6 +18,16 @@ func (handler *UserHandler) RefreshToken(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	http.SetCookie(w, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    response.RefreshToken,
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteLaxMode,
+		Path:     "/auth/refresh",
+		MaxAge:   7 * 24 * 60 * 60,
+	})
+
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	json.NewEncoder(w).Encode(map[string]string{"access_token": response.AccessToken})
 }
