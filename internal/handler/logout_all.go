@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"fmt"
 	"goAuth/internal/middleware"
 	"net/http"
@@ -24,4 +25,18 @@ func (handler *UserHandler) LogoutAll(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "logout failed", http.StatusInternalServerError)
 		return
 	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name: "refresh_token",
+		Value: "",
+		Path: "auth/refresh",
+		HttpOnly: true,
+		Secure: true,
+		SameSite: http.SameSiteLaxMode,
+		MaxAge: -1,
+	})
+	
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"msg":"logout successful from all devices"})
 }

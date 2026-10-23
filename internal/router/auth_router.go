@@ -52,6 +52,9 @@ func SetUpRouter(userHandler *handler.UserHandler, redisClient *redis.Client) *c
 
 	// goAuth/logout
 	r.With(middleware.RateLimitMiddleware(redisClient, 3, time.Minute)).Post("/goAuth/logout", userHandler.Logout)
+
+	// goAuth/logoutall
+	r.With(middleware.RateLimitMiddleware(redisClient, 3, time.Minute), middleware.RequireAccessToken(tokenService)).Post("/goAuth/logoutall", userHandler.LogoutAll)
 	
 
 	return r
