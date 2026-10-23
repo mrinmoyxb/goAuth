@@ -8,11 +8,6 @@ import (
 	"goAuth/internal/apperrors"
 )
 
-type PasswordReset struct {
-	UserID int64
-	Email  string
-}
-
 func (r *PostgresRepository) CreatePasswordReset(ctx context.Context, userID int64, email string, token string) error {
 	_, err := r.db.Exec(
 		ctx,
@@ -27,24 +22,25 @@ func (r *PostgresRepository) CreatePasswordReset(ctx context.Context, userID int
 	return nil
 }
 
-func (r *PostgresRepository) FindPasswordReset(ctx context.Context, email string, hashedToken string) (*PasswordReset, error) {
-	res := &PasswordReset{}
+func (r *PostgresRepository) FindPasswordReset(ctx context.Context, userID int64, hashedToken string) error {
+	var exists bool
 
 	err := r.db.QueryRow(
 		ctx,
-		`SELECT user_id, email from password_reset WHERE email = $1 AND token_hash = $2 AND expires_at > CURRENT_TIMESTAMP AND used_at IS NULL`,
-		email,
+		`SELECT EXISTS (SELECT 1 from password_reset WHERE user_id = $1 AND token_hash = $2 AND expires_at > CURRENT_TIMESTAMP AND used_at IS NULL)`,
+		userID,
 		hashedToken,
-	).Scan(&res.UserID, &res.Email)
+	).Scan(&exists)
+
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, apperrors.ErrUserNotFound
-		}
+        return fmt.Errorf("%w: %w", apperrors.ErrQueryFailed, err)
+    }
 
-		return nil, fmt.Errorf("%w: %w", apperrors.ErrQueryFailed, err)
-	}
+    if !exists {
+        return apperrors.ErrInvalidToken
+    }
 
-	return res, nil
+	return nil
 }
 
 func (r *PostgresRepository) ResetPassword(ctx context.Context, userID int64, tokenHash string, newPassword string) error {
@@ -83,7 +79,7 @@ func (r *PostgresRepository) ResetPassword(ctx context.Context, userID int64, to
 	// 3. revoke refresh token
 	_, err = tx.Exec(
 		ctx,
-		`UPDATE sessions SET revoked_at = CURRENT_TIMESTAMP WHERE user_id = $1 AND revoked IS NULL`,
+		`UPDATE sessions SET revoked_at = CURRENT_TIMESTAMP WHERE user_id = $1 AND revoked_at IS NULL`,
 		userID,
 	)
 	if err != nil {

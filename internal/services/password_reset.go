@@ -4,54 +4,18 @@ import (
 	"context"
 	"fmt"
 	"goAuth/internal/apperrors"
-	"goAuth/internal/repository"
 	"goAuth/internal/utils"
 	"net/mail"
 	"strings"
 )
 
-// 1. user clicks on forgot password, provide the mail and auth system sends a token
-func (s *UserService) RequestPasswordReset(ctx context.Context, email string) error {
-	// 1. check email and normalize it
-	if email == "" {
-		return apperrors.ErrInvalidEmail
-	}
-	email = strings.ToLower(strings.TrimSpace(email))
-	_, err := mail.ParseAddress(email)
-	if err != nil {
-		return fmt.Errorf("%w: %v", apperrors.ErrInvalidEmail, err)
-	}
-
-	// 2. check if that email exists
-	existingUser, err := s.repo.FindUserByEmail(ctx, email)
-	if err != nil {
-		return apperrors.ErrUserNotFound
-	}
-
-	// 3. generated token and hashed it
-	token, err := utils.GenerateToken(32)
-	if err != nil {
-		return apperrors.ErrFailedToGenerateToken
-	}
-	hashedToken := utils.HashToken(token)
-
-	// 4. create a field/entry in DB -> email, token and expiry time
-	err = s.repo.CreatePasswordReset(ctx, existingUser.ID, email, hashedToken)
-	if err != nil {
-		return apperrors.ErrInsertFailed
-	}
-
-	// 5. send token to the user in mail
-	_, err = utils.SendPasswordResetEmail(email, token)
-	if err != nil {
-		return apperrors.ErrFailedToSendMail
-	}
-
-	return nil
+type ResponsePasswordReset struct {
+	UserID int64 `json:"userID"`
 }
 
-func (s *UserService) ValidatePasswordResetToken(ctx context.Context, email string, token string) (*repository.PasswordReset, error) {
-	// 1. verify email
+func (s *UserService) RequestPasswordReset(ctx context.Context, email string) (*ResponsePasswordReset, error) {
+	user := &ResponsePasswordReset{}
+
 	if email == "" {
 		return nil, apperrors.ErrInvalidEmail
 	}
@@ -61,19 +25,50 @@ func (s *UserService) ValidatePasswordResetToken(ctx context.Context, email stri
 		return nil, fmt.Errorf("%w: %v", apperrors.ErrInvalidEmail, err)
 	}
 
-	// 2. hash token
-	if token == "" {
-		return nil, apperrors.ErrInvalidToken
+	fmt.Println("Check2")
+	existingUser, err := s.repo.FindUserByEmail(ctx, email)
+	if err != nil {
+		return nil, apperrors.ErrUserNotFound
+	}
+	user.UserID = existingUser.ID
+
+	fmt.Println("Check3")
+	token, err := utils.GenerateToken(32)
+	if err != nil {
+		return nil, apperrors.ErrFailedToGenerateToken
 	}
 	hashedToken := utils.HashToken(token)
 
-	// 3.find the user by email and validate token
-	existingUser, err := s.repo.FindPasswordReset(ctx, email, hashedToken)
+	fmt.Println("Check4")
+	err = s.repo.CreatePasswordReset(ctx, existingUser.ID, email, hashedToken)
 	if err != nil {
-		return nil, apperrors.ErrInvalidCredentials
+		return nil, apperrors.ErrInsertFailed
 	}
 
-	return existingUser, nil
+	fmt.Println("Check5")
+	go func() error {
+		_, err = utils.SendPasswordResetEmail(email, token)
+		if err != nil {
+			return apperrors.ErrFailedToSendMail
+		}
+		return nil
+	}()
+		
+	return user, nil
+}
+
+func (s *UserService) ValidatePasswordResetToken(ctx context.Context, userID int64, token string) error {
+	if token == "" {
+		return apperrors.ErrInvalidToken
+	}
+	hashedToken := utils.HashToken(token)
+
+	err := s.repo.FindPasswordReset(ctx, userID, hashedToken)
+	if err != nil {
+		return apperrors.ErrInvalidCredentials
+	}
+
+	return nil
 }
 
 func (s *UserService) ResetPassword(ctx context.Context, userID int64, token string, password string) error {

@@ -13,7 +13,7 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-func SetUpRouter(userHandler *handler.UserHandler, redisClient *redis.Client) *chi.Mux {
+func SetUpRouter(authHandler *handler.UserHandler, redisClient *redis.Client) *chi.Mux {
 	r := chi.NewRouter()
 
 	// goAuth/test
@@ -34,7 +34,7 @@ func SetUpRouter(userHandler *handler.UserHandler, redisClient *redis.Client) *c
 	})
 
 	// goAuth/register
-	r.With(middleware.RateLimitMiddleware(redisClient, 3, 5*time.Minute)).Post("/goAuth/register", userHandler.Register)
+	r.With(middleware.RateLimitMiddleware(redisClient, 3, 5*time.Minute)).Post("/goAuth/register", authHandler.Register)
 
 	// goAuth/verify-email
 	r.With(middleware.RateLimitMiddleware(redisClient, 3, 5*time.Minute), func(next http.Handler) http.Handler {
@@ -42,20 +42,25 @@ func SetUpRouter(userHandler *handler.UserHandler, redisClient *redis.Client) *c
 			fmt.Println("hello !!!")
 			next.ServeHTTP(w, r)
 		})
-	}).Get("/goAuth/verify-email", userHandler.VerifyEmail)
+	}).Get("/goAuth/verify-email", authHandler.VerifyEmail)
 
 	// goAuth/login
-	r.With(middleware.RateLimitMiddleware(redisClient, 3, time.Minute)).Post("/goAuth/login", userHandler.Login)
+	r.With(middleware.RateLimitMiddleware(redisClient, 3, time.Minute)).Post("/goAuth/login", authHandler.Login)
 
 	// goAuth/refresh
-	r.With(middleware.RateLimitMiddleware(redisClient, 3, time.Minute)).Post("/goAuth/refresh", userHandler.RefreshToken)
+	r.With(middleware.RateLimitMiddleware(redisClient, 3, time.Minute)).Post("/goAuth/refresh", authHandler.RefreshToken)
 
 	// goAuth/logout
-	r.With(middleware.RateLimitMiddleware(redisClient, 3, time.Minute)).Post("/goAuth/logout", userHandler.Logout)
+	r.With(middleware.RateLimitMiddleware(redisClient, 3, time.Minute)).Post("/goAuth/logout", authHandler.Logout)
 
-	// goAuth/logoutall
-	r.With(middleware.RateLimitMiddleware(redisClient, 3, time.Minute), middleware.RequireAccessToken(tokenService)).Post("/goAuth/logoutall", userHandler.LogoutAll)
-	
+	// goAuth/logout-all
+	r.With(middleware.RateLimitMiddleware(redisClient, 3, time.Minute), middleware.RequireAccessToken(tokenService)).Post("/goAuth/logout-all", authHandler.LogoutAll)
+
+	// goAuth/password-reset
+	r.With(middleware.RateLimitMiddleware(redisClient, 3, time.Minute), middleware.RequireAccessToken(tokenService)).Post("/goAuth/password-reset", authHandler.RequestPasswordReset)
+
+	// goAuth/password-reset/validate
+	r.With(middleware.RateLimitMiddleware(redisClient, 3, time.Minute), middleware.RequireAccessToken(tokenService)).Post("/goAuth/password-reset/validate", authHandler.ValidatePasswordResetToken)
 
 	return r
 }
