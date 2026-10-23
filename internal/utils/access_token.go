@@ -11,7 +11,7 @@ import (
 
 const (
 	accessTokenIssuer = "goAuth"
-	accessTokenTTL    = 5 * time.Minute
+	accessTokenTTL    = 15 * time.Minute
 )
 
 type TokenService struct {

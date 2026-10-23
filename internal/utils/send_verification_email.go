@@ -20,7 +20,6 @@ func SendVerificationEmail(receiver string, token string) (bool, error) {
 	message.SetHeader("From", sender)
 	message.SetHeader("To", receiver)
 	message.SetHeader("Subject", "Verify You Email - goAuth")
-	fmt.Printf("sender: %s, receiver: %s", sender, receiver)
 
 	verificationURL := fmt.Sprintf("http://localhost:%s/goAuth/verify-email?token=%s&email=%s", mailPORT, token, receiver)
 

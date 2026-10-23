@@ -14,6 +14,4 @@ func (s *UserService) Logout(ctx context.Context, refreshToken string) error {
 	return s.repo.RevokeSessionByToken(ctx, tokenHash)
 }
 
-func (s *UserService) LogoutAll(ctx context.Context, userID int64) error {
-	return s.repo.RevokeAllUserSessions(ctx, userID)
-}
+

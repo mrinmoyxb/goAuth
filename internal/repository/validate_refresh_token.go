@@ -18,7 +18,7 @@ func (r *PostgresRepository) ValidateRefreshToken(ctx context.Context, token str
 
 	err := r.db.QueryRow(
 		ctx,
-		`SELECT id, user_id FROM sessions WHERE refresh_token_hash = $1 AND expires_at > CURRENT_TIMESTAMP`,
+		`SELECT id, user_id FROM sessions WHERE refresh_token_hash = $1 AND expires_at > CURRENT_TIMESTAMP AND revoked_at IS NULL`,
 		token,
 	).Scan(&refreshToken.ID, &refreshToken.UserID)
 

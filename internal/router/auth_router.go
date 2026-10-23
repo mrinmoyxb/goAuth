@@ -36,9 +36,6 @@ func SetUpRouter(userHandler *handler.UserHandler, redisClient *redis.Client) *c
 	// goAuth/register
 	r.With(middleware.RateLimitMiddleware(redisClient, 3, 5*time.Minute)).Post("/goAuth/register", userHandler.Register)
 
-	// goAut/login
-	r.With(middleware.RateLimitMiddleware(redisClient, 3, time.Minute)).Post("/goAuth/login", userHandler.Login)
-
 	// goAuth/verify-email
 	r.With(middleware.RateLimitMiddleware(redisClient, 3, 5*time.Minute), func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -46,6 +43,16 @@ func SetUpRouter(userHandler *handler.UserHandler, redisClient *redis.Client) *c
 			next.ServeHTTP(w, r)
 		})
 	}).Get("/goAuth/verify-email", userHandler.VerifyEmail)
+
+	// goAuth/login
+	r.With(middleware.RateLimitMiddleware(redisClient, 3, time.Minute)).Post("/goAuth/login", userHandler.Login)
+
+	// goAuth/refresh
+	r.With(middleware.RateLimitMiddleware(redisClient, 3, time.Minute)).Post("/goAuth/refresh", userHandler.RefreshToken)
+
+	// goAuth/logout
+	r.With(middleware.RateLimitMiddleware(redisClient, 3, time.Minute)).Post("/goAuth/logout", userHandler.Logout)
+	
 
 	return r
 }

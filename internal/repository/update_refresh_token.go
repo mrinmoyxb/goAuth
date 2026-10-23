@@ -9,7 +9,7 @@ func (r *PostgresRepository) UpdateRefreshToken(ctx context.Context, oldToken st
 	tag, err := r.db.Exec(
 		ctx,
 		`UPDATE sessions SET refresh_token_hash = $1, expires_at = CURRENT_TIMESTAMP + interval '7 days'
-		WHERE id = $2 AND user_id = $3 AND refresh_token_hash = $4 AND expires_at > CURRENT_TIMESTAMP`,
+		WHERE id = $2 AND user_id = $3 AND refresh_token_hash = $4 AND expires_at > CURRENT_TIMESTAMP AND revoked_at IS NULL`,
 		newToken, sessionID, userID, oldToken,
 	)
 

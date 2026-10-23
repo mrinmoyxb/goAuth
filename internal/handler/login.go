@@ -3,7 +3,6 @@ package handler
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"goAuth/internal/apperrors"
 	"goAuth/internal/models"
 	"log"
@@ -12,7 +11,6 @@ import (
 
 func (handler *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
-	fmt.Println("Check1")
 
 	var req models.LoginRequest
 
@@ -25,8 +23,7 @@ func (handler *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, apperrors.ErrRequiredField.Message, apperrors.ErrRequiredField.StatusCode)
 		return
 	}
-
-	fmt.Println("Check2")
+	
 	user, err := handler.service.Login(r.Context(), req)
 	if err != nil {
 		status := http.StatusInternalServerError
@@ -47,7 +44,7 @@ func (handler *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.SetCookie(w, &http.Cookie{
-		Name:     "refreshToken",
+		Name:     "refresh_token",
 		Value:    user.RefreshToken,
 		HttpOnly: true,
 		Secure:   true,
