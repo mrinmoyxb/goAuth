@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/jackc/pgx/v5"
 	"goAuth/internal/apperrors"
 	"goAuth/internal/models"
-	"github.com/jackc/pgx/v5"
 )
 
 func (r *PostgresRepository) FindVerifiedUserByEmail(ctx context.Context, email string) (*models.User, error) {

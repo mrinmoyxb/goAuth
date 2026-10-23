@@ -8,8 +8,6 @@ import (
 	"strconv"
 )
 
-
-
 func (handler *UserHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("refreshToken")
 	if err == nil && cookie.Value != "" {

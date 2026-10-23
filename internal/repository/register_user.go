@@ -4,10 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"goAuth/internal/apperrors"
-	"goAuth/internal/models"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"goAuth/internal/apperrors"
+	"goAuth/internal/models"
 )
 
 type PostgresRepository struct {
@@ -68,4 +68,3 @@ func (r *PostgresRepository) CreateUser(ctx context.Context, user *models.UserIn
 	}
 	return nil
 }
-

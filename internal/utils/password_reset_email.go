@@ -51,7 +51,6 @@ func SendPasswordResetEmail(receiver string, token string) (bool, error) {
 
 	message.SetBody("text/html", htmlBody)
 
-
 	fmt.Println("Email sent successfully to", receiver)
 	return true, nil
 }

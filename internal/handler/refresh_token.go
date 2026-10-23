@@ -5,19 +5,19 @@ import (
 	"net/http"
 )
 
-func (handler *UserHandler) RefreshToken (w http.ResponseWriter, r *http.Request){
+func (handler *UserHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("refresh_token")
 	if err != nil {
 		http.Error(w, "refresh token missing", http.StatusUnauthorized)
 		return
 	}
 
-	response, err := handler.service.ValidateRefreshToken(r.Context(), cookie.Value)
+	response, err := handler.service.RefreshAccessToken(r.Context(), cookie.Value)
 	if err != nil {
-        http.Error(w, "invalid or expired refresh token", http.StatusUnauthorized)
-        return
-    }
-	
+		http.Error(w, "invalid or expired refresh token", http.StatusUnauthorized)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }

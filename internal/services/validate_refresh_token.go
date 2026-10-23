@@ -8,7 +8,8 @@ import (
 )
 
 type AccessTokenResetResponse struct {
-	AccessToken string `json:"access_token"`
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
 }
 
 func (s *UserService) RefreshAccessToken(ctx context.Context, refreshToken string) (*AccessTokenResetResponse, error) {
@@ -26,25 +27,29 @@ func (s *UserService) RefreshAccessToken(ctx context.Context, refreshToken strin
 	token, err := utils.NewTokenService()
 	if err != nil {
 		return nil, apperrors.ErrFailedToGenerateToken
-	}	
+	}
 
 	user_id := strconv.FormatInt(userID, 10)
 	user := utils.AuthenticatedUser{
 		UserID: user_id,
-		Role: "user",
+		Role:   "user",
 	}
 
 	access_token, err := token.GenerateAccessToken(user)
 	if err != nil {
-        return nil, apperrors.ErrFailedToGenerateToken
-    }
+		return nil, apperrors.ErrFailedToGenerateToken
+	}
+
+	newRefreshToken, err := utils.GenerateToken(32)
+	newRefreshTokenHash := utils.HashToken(newRefreshToken)
+
+	err = s.repo.
 
 	return &AccessTokenResetResponse{
 		AccessToken: access_token,
 	}, nil
 
 }
-
 
 /*
 Your current flow issues a new access token but leaves the existing refresh token valid. For a production-oriented authentication system, consider rotating refresh tokens:

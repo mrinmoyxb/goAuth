@@ -30,7 +30,7 @@ func SetUpRouter(userHandler *handler.UserHandler, redisClient *redis.Client) *c
 		fmt.Println("error in initiating access token class inside router")
 	}
 	r.With(middleware.RequireAccessToken(tokenService), middleware.RateLimitMiddleware(redisClient, 3, time.Minute)).Get("/goAuth/health", func(w http.ResponseWriter, r *http.Request) {
-		json.NewEncoder(w).Encode(map[string]string{"msg":"success"})
+		json.NewEncoder(w).Encode(map[string]string{"msg": "success"})
 	})
 
 	// goAuth/register
@@ -38,7 +38,7 @@ func SetUpRouter(userHandler *handler.UserHandler, redisClient *redis.Client) *c
 
 	// goAut/login
 	r.With(middleware.RateLimitMiddleware(redisClient, 3, time.Minute)).Post("/goAuth/login", userHandler.Login)
-	
+
 	// goAuth/verify-email
 	r.With(middleware.RateLimitMiddleware(redisClient, 3, 5*time.Minute), func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

@@ -1,15 +1,12 @@
 package repository
 
-
 import (
 	"context"
 	"errors"
 	"fmt"
-	"goAuth/internal/apperrors"
 	"github.com/jackc/pgx/v5"
+	"goAuth/internal/apperrors"
 )
-
-
 
 func (r *PostgresRepository) MarkEmailVerifiedByToken(ctx context.Context, email string, token string) error {
 	tx, err := r.db.Begin(ctx)

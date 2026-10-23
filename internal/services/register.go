@@ -64,10 +64,10 @@ func (s *UserService) Register(ctx context.Context, req models.RegisterRequest) 
 	}
 
 	result := &models.RegisterResponse{
-		ID:               user.ID,
-		Email:            user.Email,
-		EmailVerified:    false,
-		EmailStatus:      "pending",
+		ID:            user.ID,
+		Email:         user.Email,
+		EmailVerified: false,
+		EmailStatus:   "pending",
 	}
 
 	_, err = s.SendVerificationEmail(ctx, result.Email, emailToken)

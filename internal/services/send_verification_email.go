@@ -2,9 +2,9 @@ package services
 
 import (
 	"context"
-	"log"
 	"goAuth/internal/apperrors"
 	"goAuth/internal/utils"
+	"log"
 )
 
 func (s *UserService) SendVerificationEmail(ctx context.Context, email string, token string) (bool, error) {
@@ -17,7 +17,7 @@ func (s *UserService) SendVerificationEmail(ctx context.Context, email string, t
 	}
 
 	go func(email, token string) (bool, error) {
-	_, err := utils.SendVerificationEmail(email, token)
+		_, err := utils.SendVerificationEmail(email, token)
 		if err != nil {
 			log.Printf("send verification email: %v", err)
 		}

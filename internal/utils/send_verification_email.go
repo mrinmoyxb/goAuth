@@ -44,5 +44,3 @@ func SendVerificationEmail(receiver string, token string) (bool, error) {
 
 	return true, nil
 }
-
-

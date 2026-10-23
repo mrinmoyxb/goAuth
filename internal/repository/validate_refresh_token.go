@@ -2,8 +2,8 @@ package repository
 
 import (
 	"context"
-	"goAuth/internal/apperrors"
 	"errors"
+	"goAuth/internal/apperrors"
 
 	"github.com/jackc/pgx/v5"
 )

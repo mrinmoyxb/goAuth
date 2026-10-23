@@ -67,5 +67,3 @@ func (handler *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 }
-
-

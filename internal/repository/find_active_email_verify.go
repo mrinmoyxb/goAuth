@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/jackc/pgx/v5"
 	"goAuth/internal/apperrors"
 	"goAuth/internal/models"
-	"github.com/jackc/pgx/v5"
 )
 
 func (r *PostgresRepository) FindActiveEmailVerification(ctx context.Context, verification *models.EmailVerification, response *bool) error {

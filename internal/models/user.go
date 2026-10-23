@@ -44,11 +44,11 @@ type LoginRequest struct {
 }
 
 type RegisterResponse struct {
-	ID               int64          `json:"id"`
-	Email            string         `json:"email"`
-	EmailVerified    bool           `json:"email_verified"`
-	EmailStatus      string         `json:"email_status"`
-	CreatedAt        time.Time      `json:"created_at"`
+	ID            int64     `json:"id"`
+	Email         string    `json:"email"`
+	EmailVerified bool      `json:"email_verified"`
+	EmailStatus   string    `json:"email_status"`
+	CreatedAt     time.Time `json:"created_at"`
 }
 
 type LoginResponse struct {

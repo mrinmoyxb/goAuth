@@ -16,7 +16,7 @@ func (handler *UserHandler) VerifyEmail(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, apperrors.ErrInvalidCredentials.Message, apperrors.ErrInvalidCredentials.StatusCode)
 		return
 	}
-	
+
 	err := handler.service.VerifyEmail(r.Context(), email, token)
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
