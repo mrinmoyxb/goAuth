@@ -72,14 +72,11 @@ func (s *UserService) ValidatePasswordResetToken(ctx context.Context, userID int
 }
 
 func (s *UserService) ResetPassword(ctx context.Context, userID int64, token string, password string) error {
-
-	// 1. hash token
 	if token == "" {
 		return apperrors.ErrInvalidToken
 	}
 	hashedToken := utils.HashToken(token)
 
-	// 2. validate new password and hash it
 	if !utils.ValidatePasswordPolicy(password) {
 		return apperrors.ErrInvalidPassword
 	}

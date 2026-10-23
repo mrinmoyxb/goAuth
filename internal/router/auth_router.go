@@ -62,5 +62,8 @@ func SetUpRouter(authHandler *handler.UserHandler, redisClient *redis.Client) *c
 	// goAuth/password-reset/validate
 	r.With(middleware.RateLimitMiddleware(redisClient, 3, time.Minute), middleware.RequireAccessToken(tokenService)).Post("/goAuth/password-reset/validate", authHandler.ValidatePasswordResetToken)
 
+	// gotAuth/password-reset/reset
+	r.With(middleware.RateLimitMiddleware(redisClient, 3, time.Minute), middleware.RequireAccessToken(tokenService)).Post("/goAuth/password-reset/reset", authHandler.ResetPassword)
+
 	return r
 }

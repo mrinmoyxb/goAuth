@@ -33,12 +33,12 @@ func (r *PostgresRepository) FindPasswordReset(ctx context.Context, userID int64
 	).Scan(&exists)
 
 	if err != nil {
-        return fmt.Errorf("%w: %w", apperrors.ErrQueryFailed, err)
-    }
+		return fmt.Errorf("%w: %w", apperrors.ErrQueryFailed, err)
+	}
 
-    if !exists {
-        return apperrors.ErrInvalidToken
-    }
+	if !exists {
+		return apperrors.ErrInvalidToken
+	}
 
 	return nil
 }
@@ -50,8 +50,9 @@ func (r *PostgresRepository) ResetPassword(ctx context.Context, userID int64, to
 	}
 	defer tx.Rollback(ctx)
 
-	// 1. updated the password_reset table
-	_, err = tx.Exec(
+	fmt.Println("test 1")
+
+	tag, err := tx.Exec(
 		ctx,
 		`UPDATE password_reset SET used_at = CURRENT_TIMESTAMP WHERE token_hash = $1 AND user_id = $2 AND expires_at > CURRENT_TIMESTAMP AND used_at IS NULL`,
 		tokenHash, userID,
@@ -62,11 +63,13 @@ func (r *PostgresRepository) ResetPassword(ctx context.Context, userID int64, to
 		}
 		return fmt.Errorf("%w: %w", apperrors.ErrQueryFailed, err)
 	}
+	if tag.RowsAffected() != 1 {
+		return apperrors.ErrInvalidPasswordResetToken
+	}
 
-	// 2. update password in the users table
-	tag, err := tx.Exec(
+	tag, err = tx.Exec(
 		ctx,
-		`UPDATE users set password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE user_id = $2 AND email_verified = true`,
+		`UPDATE users SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE user_id = $2 AND email_verified = true`,
 		newPassword, userID,
 	)
 	if err != nil {
@@ -76,8 +79,7 @@ func (r *PostgresRepository) ResetPassword(ctx context.Context, userID int64, to
 		return errors.New("verified user not found or email not verified")
 	}
 
-	// 3. revoke refresh token
-	_, err = tx.Exec(
+	tag, err = tx.Exec(
 		ctx,
 		`UPDATE sessions SET revoked_at = CURRENT_TIMESTAMP WHERE user_id = $1 AND revoked_at IS NULL`,
 		userID,
@@ -85,6 +87,8 @@ func (r *PostgresRepository) ResetPassword(ctx context.Context, userID int64, to
 	if err != nil {
 		return fmt.Errorf("%w: %w", apperrors.ErrQueryFailed, err)
 	}
+
+	fmt.Println("test 2")
 
 	if err := tx.Commit(ctx); err != nil {
 		return fmt.Errorf("%w: %v", apperrors.ErrInsertFailed, err)

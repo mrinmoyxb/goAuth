@@ -2,22 +2,16 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"goAuth/internal/apperrors"
 	"net/http"
-	"fmt"
 )
 
 type RequestPasswordReset struct {
 	Email string `json:"email"`
 }
 
-type ResetPassword struct {
-	UserID   int64
-	Token    string
-	Password string
-}
-
-func (handler *UserHandler) RequestPasswordReset(w http.ResponseWriter, r *http.Request) { 
+func (handler *UserHandler) RequestPasswordReset(w http.ResponseWriter, r *http.Request) {
 	req := RequestPasswordReset{}
 
 	fmt.Println("EMAIL: ", req.Email)
@@ -40,8 +34,5 @@ func (handler *UserHandler) RequestPasswordReset(w http.ResponseWriter, r *http.
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]any{"msg": "sent a token to the mail", "user":user.UserID})
+	json.NewEncoder(w).Encode(map[string]any{"msg": "sent a token to the mail", "user": user.UserID})
 }
-
-
-

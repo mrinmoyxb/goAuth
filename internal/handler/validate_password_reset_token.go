@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
 	"goAuth/internal/apperrors"
 	"net/http"
 )
@@ -30,7 +29,6 @@ func (handler *UserHandler) ValidatePasswordResetToken(w http.ResponseWriter, r 
 		return
 	}
 
-	fmt.Println("Check 2")
 	err = handler.service.ValidatePasswordResetToken(r.Context(), res.UserID, res.Token)
 	if err != nil {
 		http.Error(w, apperrors.ErrInvalidCredentials.Message, apperrors.ErrInvalidCredentials.StatusCode)
