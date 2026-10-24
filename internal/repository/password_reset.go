@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/jackc/pgx/v5"
 	"goAuth/internal/apperrors"
 )
 
@@ -50,17 +49,12 @@ func (r *PostgresRepository) ResetPassword(ctx context.Context, userID int64, to
 	}
 	defer tx.Rollback(ctx)
 
-	fmt.Println("test 1")
-
 	tag, err := tx.Exec(
 		ctx,
 		`UPDATE password_reset SET used_at = CURRENT_TIMESTAMP WHERE token_hash = $1 AND user_id = $2 AND expires_at > CURRENT_TIMESTAMP AND used_at IS NULL`,
 		tokenHash, userID,
 	)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return errors.New("invalid, expired, or already-used reset token")
-		}
 		return fmt.Errorf("%w: %w", apperrors.ErrQueryFailed, err)
 	}
 	if tag.RowsAffected() != 1 {
@@ -69,7 +63,7 @@ func (r *PostgresRepository) ResetPassword(ctx context.Context, userID int64, to
 
 	tag, err = tx.Exec(
 		ctx,
-		`UPDATE users SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE user_id = $2 AND email_verified = true`,
+		`UPDATE users SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 AND email_verified = true`,
 		newPassword, userID,
 	)
 	if err != nil {
@@ -87,8 +81,6 @@ func (r *PostgresRepository) ResetPassword(ctx context.Context, userID int64, to
 	if err != nil {
 		return fmt.Errorf("%w: %w", apperrors.ErrQueryFailed, err)
 	}
-
-	fmt.Println("test 2")
 
 	if err := tx.Commit(ctx); err != nil {
 		return fmt.Errorf("%w: %v", apperrors.ErrInsertFailed, err)
